@@ -1,6 +1,9 @@
 package com.example.entity.vo;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.io.Serializable;
@@ -10,32 +13,13 @@ import java.util.Date;
 /**
  * 用户信息
  */
-public class UserInfoVO implements Serializable {
-
-
-    /**
-     * 用户ID
-     */
-    private String userId;
-
-    /**
-     * 昵称
-     */
+@Data
+public class UserInfoVO{
+    @TableId(type = IdType.ASSIGN_ID)
+    private Long userId;
     private String nickName;
-
-    /**
-     * 邮箱
-     */
+    private String phone;
     private String email;
-
-    /**
-     * qq 头像
-     */
-    private String qqAvatar;
-
-    /**
-     * 加入时间
-     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date joinTime;
@@ -62,75 +46,6 @@ public class UserInfoVO implements Serializable {
      */
     private Long totalSpace;
 
-    public String getUserId() {
-        return userId;
-    }
-
-    public void setUserId(String userId) {
-        this.userId = userId;
-    }
-
-    public String getNickName() {
-        return nickName;
-    }
-
-    public void setNickName(String nickName) {
-        this.nickName = nickName;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    public String getQqAvatar() {
-        return qqAvatar;
-    }
-
-    public void setQqAvatar(String qqAvatar) {
-        this.qqAvatar = qqAvatar;
-    }
-
-    public Date getJoinTime() {
-        return joinTime;
-    }
-
-    public void setJoinTime(Date joinTime) {
-        this.joinTime = joinTime;
-    }
-
-    public Date getLastLoginTime() {
-        return lastLoginTime;
-    }
-
-    public void setLastLoginTime(Date lastLoginTime) {
-        this.lastLoginTime = lastLoginTime;
-    }
-
-    public Integer getStatus() {
-        return status;
-    }
-
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    public Long getUseSpace() {
-        return useSpace;
-    }
-
-    public void setUseSpace(Long useSpace) {
-        this.useSpace = useSpace;
-    }
-
-    public Long getTotalSpace() {
-        return totalSpace;
-    }
-
-    public void setTotalSpace(Long totalSpace) {
-        this.totalSpace = totalSpace;
+    public UserInfoVO() {
     }
 }

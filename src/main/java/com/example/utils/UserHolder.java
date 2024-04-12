@@ -1,7 +1,5 @@
 package com.example.utils;
 
-import com.jkdp.dto.UserDTO;
-
 public class UserHolder {
     private static final ThreadLocal<UserDTO> tl = new ThreadLocal<>();
 

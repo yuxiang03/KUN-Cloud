@@ -1,5 +1,6 @@
 package com.example.controller;
 
+import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.dto.UploadResultDto;
 import com.example.entity.enums.FileCategoryEnums;
@@ -8,13 +9,11 @@ import com.example.entity.enums.FileFolderTypeEnums;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FileInfoVO;
 import com.example.entity.vo.PaginationResultVO;
-import com.example.entity.vo.ResponseVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
@@ -38,14 +37,14 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/uploadFile")
-    public ResponseVO uploadFile(HttpSession session,
-                                 String fileId,
-                                 MultipartFile file,
-                                 String fileName,
-                                 String filePid,
-                                 String fileMd5,
-                                 Integer chunkIndex,
-                                 Integer chunks) {
+    public Result uploadFile(HttpSession session,
+                             String fileId,
+                             MultipartFile file,
+                             String fileName,
+                             String filePid,
+                             String fileMd5,
+                             Integer chunkIndex,
+                             Integer chunks) {
 
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         UploadResultDto resultDto = fileInfoService.uploadFile(webUserDto, fileId, file, fileName, filePid, fileMd5, chunkIndex, chunks);
@@ -71,7 +70,6 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/newFoloder")
-    @GlobalInterceptor(checkParams = true)
     public ResponseVO newFoloder(HttpSession session,
                                  @VerifyParam(required = true) String filePid,
                                  @VerifyParam(required = true) String fileName) {
@@ -81,14 +79,12 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/getFolderInfo")
-    @GlobalInterceptor(checkParams = true)
     public ResponseVO getFolderInfo(HttpSession session, @VerifyParam(required = true) String path) {
         return super.getFolderInfo(path, getUserInfoFromSession(session).getUserId());
     }
 
 
     @RequestMapping("/rename")
-    @GlobalInterceptor(checkParams = true)
     public ResponseVO rename(HttpSession session,
                              @VerifyParam(required = true) String fileId,
                              @VerifyParam(required = true) String fileName) {

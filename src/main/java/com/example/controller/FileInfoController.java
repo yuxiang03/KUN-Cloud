@@ -2,10 +2,10 @@ package com.example.controller;
 
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
-import com.example.entity.dto.UploadResultDto;
 import com.example.entity.enums.FileCategoryEnums;
 import com.example.entity.enums.FileDelFlagEnums;
 import com.example.entity.enums.FileFolderTypeEnums;
+import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FileInfoVO;
 import com.example.entity.vo.PaginationResultVO;
@@ -16,6 +16,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 /**
  * 文件信息 Controller
  */
@@ -23,7 +25,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class FileInfoController extends CommonFileController {
 
     @RequestMapping("/loadDataList")
-    @GlobalInterceptor(checkParams = true)
+
     public ResponseVO loadDataList(HttpSession session, FileInfoQuery query, String category) {
         FileCategoryEnums categoryEnum = FileCategoryEnums.getByCode(category);
         if (null != categoryEnum) {
@@ -94,7 +96,7 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/loadAllFolder")
-    @GlobalInterceptor(checkParams = true)
+
     public ResponseVO loadAllFolder(HttpSession session, @VerifyParam(required = true) String filePid, String currentFileIds) {
         FileInfoQuery query = new FileInfoQuery();
         query.setUserId(getUserInfoFromSession(session).getUserId());
@@ -110,7 +112,7 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/changeFileFolder")
-    @GlobalInterceptor(checkParams = true)
+
     public ResponseVO changeFileFolder(HttpSession session,
                                        @VerifyParam(required = true) String fileIds,
                                        @VerifyParam(required = true) String filePid) {
@@ -120,7 +122,7 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/createDownloadUrl/{fileId}")
-    @GlobalInterceptor(checkParams = true)
+
     public ResponseVO createDownloadUrl(HttpSession session, @PathVariable("fileId") @VerifyParam(required = true) String fileId) {
         return super.createDownloadUrl(fileId, getUserInfoFromSession(session).getUserId());
     }
@@ -133,7 +135,7 @@ public class FileInfoController extends CommonFileController {
 
 
     @RequestMapping("/delFile")
-    @GlobalInterceptor(checkParams = true)
+
     public ResponseVO delFile(HttpSession session, @VerifyParam(required = true) String fileIds) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.removeFile2RecycleBatch(webUserDto.getUserId(), fileIds);

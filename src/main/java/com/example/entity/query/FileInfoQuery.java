@@ -1,5 +1,8 @@
 package com.example.entity.query;
 
+import lombok.Data;
+
+@Data
 public class FileInfoQuery extends BaseParam {
     private String fileId;
     private String fileIdFuzzy;

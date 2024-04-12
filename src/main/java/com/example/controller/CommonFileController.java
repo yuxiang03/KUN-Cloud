@@ -1,14 +1,18 @@
 package com.example.controller;
 
+import com.example.component.RedisComponent;
 import com.example.entity.config.AppConfig;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.DownloadFileDto;
+import com.example.entity.dto.Result;
 import com.example.entity.enums.FileCategoryEnums;
 import com.example.entity.enums.FileFolderTypeEnums;
 import com.example.entity.enums.ResponseCodeEnum;
+import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FolderVO;
 import com.example.entity.vo.ResponseVO;
+import com.example.service.FileInfoService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -16,8 +20,9 @@ import org.apache.tomcat.util.buf.StringUtils;
 
 import java.io.File;
 import java.net.URLEncoder;
+import java.util.List;
 
-public class CommonFileController extends ABaseController {
+public class CommonFileController {
 
     @Resource
     protected FileInfoService fileInfoService;
@@ -104,7 +109,7 @@ public class CommonFileController extends ABaseController {
         readFile(response, filePath);
     }
 
-    protected ResponseVO createDownloadUrl(String fileId, String userId) {
+    protected Result createDownloadUrl(String fileId, String userId) {
         FileInfo fileInfo = fileInfoService.getFileInfoByFileIdAndUserId(fileId, userId);
         if (fileInfo == null) {
             throw new BusinessException(ResponseCodeEnum.CODE_600);

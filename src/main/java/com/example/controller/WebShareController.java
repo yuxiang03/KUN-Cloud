@@ -70,7 +70,7 @@ public class WebShareController extends CommonFileController {
         return getSuccessResult(getShareInfoCommon(shareId));
     }
 
-    private ShareInfoVO getShareInfoCommon(String shareId) {
+    private Result getShareInfoCommon(String shareId) {
         FileShare share = fileShareService.getFileShareByShareId(shareId);
         if (null == share || (share.getExpireTime() != null && new Date().after(share.getExpireTime()))) {
             throw new BusinessException(ResponseCodeEnum.CODE_902.getMsg());

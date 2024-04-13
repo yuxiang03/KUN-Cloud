@@ -6,6 +6,7 @@ import com.example.entity.dto.DownloadFileDto;
 import com.example.entity.dto.SysSettingsDto;
 import com.example.entity.dto.UserSpaceDto;
 import com.example.entity.po.FileInfo;
+import com.example.entity.po.User;
 import com.example.entity.po.UserInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.query.UserInfoQuery;
@@ -21,10 +22,10 @@ public class RedisComponent {
     private RedisUtils redisUtils;
 
     @Resource
-    private UserMapper<UserInfo, UserInfoQuery> userInfoMapper;
+    private UserMapper userMapper;
 
     @Resource
-    private FileInfoMapper<FileInfo, FileInfoQuery> fileInfoMapper;
+    private FileInfoMapper fileInfoMapper;
 
     /**
      * 获取系统设置
@@ -90,7 +91,7 @@ public class RedisComponent {
         Long useSpace = this.fileInfoMapper.selectUseSpace(userId);
         spaceDto.setUseSpace(useSpace);
 
-        UserInfo userInfo = this.userInfoMapper.selectByUserId(userId);
+        UserInfo userInfo = this.userMapper.selectByUserId(userId);
         spaceDto.setTotalSpace(userInfo.getTotalSpace());
         redisUtils.setex(Constants.REDIS_KEY_USER_SPACE_USE + userId, spaceDto, Constants.REDIS_KEY_EXPIRES_DAY);
         return spaceDto;

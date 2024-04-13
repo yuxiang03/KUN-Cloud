@@ -10,8 +10,8 @@ import java.util.Date;
  * 用户信息
  */
 @Data
-public class UserInfo{
-    private Long userId;
+public class User{
+    private Long id;
     private String nickName;
     private String phone;
     private String email;

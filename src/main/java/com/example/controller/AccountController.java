@@ -2,11 +2,11 @@ package com.example.controller;
 
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.CreateImageCode;
+import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.enums.VerifyRegexEnum;
-import com.example.entity.po.UserInfo;
-import com.example.entity.vo.ResponseVO;
+import com.example.entity.po.User;
 import com.example.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
@@ -66,8 +66,10 @@ public class AccountController{
     @RequestMapping("/sendEmailCode")
     public ResponseVO sendEmailCode(HttpSession session,
                                     @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
-                                    @VerifyParam(required = true) String checkCode,
-                                    @VerifyParam(required = true) Integer type) {
+
+                                    String checkCode,
+
+                                    Integer type) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY_EMAIL))) {
                 throw new BusinessException("图片验证码不正确");
@@ -91,8 +93,10 @@ public class AccountController{
                                @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
                                @VerifyParam(required = true, max = 20) String nickName,
                                @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
-                               @VerifyParam(required = true) String checkCode,
-                               @VerifyParam(required = true) String emailCode) {
+
+                               String checkCode,
+
+                               String emailCode) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
                 throw new BusinessException("图片验证码不正确");
@@ -120,8 +124,10 @@ public class AccountController{
     public ResponseVO resetPwd(HttpSession session,
                                @VerifyParam(required = true, regex = VerifyRegexEnum.EMAIL, max = 150) String email,
                                @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password,
-                               @VerifyParam(required = true) String checkCode,
-                               @VerifyParam(required = true) String emailCode) {
+
+                               String checkCode,
+
+                               String emailCode) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
                 throw new BusinessException("图片验证码不正确");
@@ -134,7 +140,8 @@ public class AccountController{
     }
 
     @RequestMapping("/getAvatar/{userId}")
-    public void getAvatar(HttpServletResponse response, @VerifyParam(required = true) @PathVariable("userId") String userId) {
+    public void getAvatar(HttpServletResponse response,
+                          @PathVariable("userId") String userId) {
         String avatarFolderName = Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_AVATAR_NAME;
         File folder = new File(appConfig.getProjectFolder() + avatarFolderName);
         if (!folder.exists()) {
@@ -212,10 +219,10 @@ public class AccountController{
 
     @RequestMapping("/updatePassword")
     public ResponseVO updatePassword(HttpSession session,
-                                     @VerifyParam(required = true, regex = VerifyRegexEnum.PASSWORD, min = 8, max = 18) String password) {
+                                     String password) {
         SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
-        UserInfo userInfo = new UserInfo();
-        userInfo.setPassword(StringTools.encodeByMD5(password));
+        User user = new User();
+        user.setPassword(StringTools.encodeByMD5(password));
         userInfoService.updateUserInfoByUserId(userInfo, sessionWebUserDto.getUserId());
         return getSuccessResponseVO(null);
     }
@@ -233,8 +240,10 @@ public class AccountController{
 
     @RequestMapping("qqlogin/callback")
     public ResponseVO qqLoginCallback(HttpSession session,
-                                      @VerifyParam(required = true) String code,
-                                      @VerifyParam(required = true) String state) {
+
+                                      String code,
+
+                                      String state) {
         SessionWebUserDto sessionWebUserDto = userInfoService.qqLogin(code);
         session.setAttribute(Constants.SESSION_KEY, sessionWebUserDto);
         Map<String, Object> result = new HashMap<>();

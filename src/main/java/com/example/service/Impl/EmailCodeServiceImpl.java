@@ -7,6 +7,7 @@ import com.example.entity.enums.PageSize;
 import com.example.entity.po.EmailCode;
 import com.example.entity.query.SimplePage;
 import com.example.entity.vo.PaginationResultVO;
+import com.example.mapper.UserMapper;
 import com.example.service.EmailCodeService;
 import jakarta.annotation.Resource;
 import jakarta.mail.internet.MimeMessage;
@@ -26,7 +27,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<> implements EmailCodeServ
     private JavaMailSender javaMailSender;
 
     @Resource
-    private UserInfoMapper userInfoMapper;
+    private UserMapper userMapper;
 
     /**
      * 根据条件查询列表
@@ -86,7 +87,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<> implements EmailCodeServ
         if (listBean == null || listBean.isEmpty()) {
             return 0;
         }
-        return this.emailCodeMapper.insertOrUpdateBatch(listBean);
+        return emailCodeMapper.insertOrUpdateBatch(listBean);
     }
 
     /**

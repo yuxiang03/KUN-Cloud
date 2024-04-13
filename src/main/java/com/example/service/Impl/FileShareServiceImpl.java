@@ -1,26 +1,19 @@
 package com.example.service.Impl;
 
-import com.easypan.entity.constants.Constants;
-import com.easypan.entity.dto.SessionShareDto;
-import com.easypan.entity.enums.PageSize;
-import com.easypan.entity.enums.ResponseCodeEnum;
-import com.easypan.entity.enums.ShareValidTypeEnums;
-import com.easypan.entity.po.FileShare;
-import com.easypan.entity.query.FileShareQuery;
-import com.easypan.entity.query.SimplePage;
-import com.easypan.entity.vo.PaginationResultVO;
-import com.easypan.exception.BusinessException;
-import com.easypan.mappers.FileShareMapper;
-import com.easypan.service.FileShareService;
-import com.easypan.utils.DateUtil;
-import com.easypan.utils.StringTools;
+import com.example.entity.constants.Constants;
+import com.example.entity.dto.SessionShareDto;
+import com.example.entity.enums.PageSize;
+import com.example.entity.enums.ShareValidTypeEnums;
+import com.example.entity.po.FileShare;
+import com.example.entity.query.FileShareQuery;
+import com.example.entity.query.SimplePage;
+import com.example.entity.vo.PaginationResultVO;
+import com.example.service.FileShareService;
+import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import javax.annotation.Resource;
-import java.util.Date;
 import java.util.List;
-
 
 /**
  * 分享信息 业务接口实现
@@ -29,7 +22,7 @@ import java.util.List;
 public class FileShareServiceImpl implements FileShareService {
 
     @Resource
-    private FileShareMapper<FileShare, FileShareQuery> fileShareMapper;
+    private FileShareMapper fileShareMapper;
 
     /**
      * 根据条件查询列表

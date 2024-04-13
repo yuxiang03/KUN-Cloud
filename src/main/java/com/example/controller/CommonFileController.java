@@ -1,22 +1,20 @@
 package com.example.controller;
 
-import com.example.component.RedisComponent;
 import com.example.entity.config.AppConfig;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.DownloadFileDto;
 import com.example.entity.dto.Result;
 import com.example.entity.enums.FileCategoryEnums;
 import com.example.entity.enums.FileFolderTypeEnums;
-import com.example.entity.enums.ResponseCodeEnum;
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FolderVO;
-import com.example.entity.vo.ResponseVO;
 import com.example.service.FileInfoService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.apache.tomcat.util.buf.StringUtils;
+import org.springframework.data.redis.core.StringRedisTemplate;
 
 import java.io.File;
 import java.net.URLEncoder;
@@ -31,10 +29,10 @@ public class CommonFileController {
     protected AppConfig appConfig;
 
     @Resource
-    private RedisComponent redisComponent;
+    private StringRedisTemplate stringRedisTemplate;
 
 
-    public ResponseVO getFolderInfo(String path, String userId) {
+    public Result getFolderInfo(String path, String userId) {
         String[] pathArray = path.split("/");
         FileInfoQuery infoQuery = new FileInfoQuery();
         infoQuery.setUserId(userId);
@@ -43,7 +41,7 @@ public class CommonFileController {
         String orderBy = "field(file_id,\"" + StringUtils.join(pathArray, "\",\"") + "\")";
         infoQuery.setOrderBy(orderBy);
         List<FileInfo> fileInfoList = fileInfoService.findListByParam(infoQuery);
-        return getSuccessResponseVO(CopyTools.copyList(fileInfoList, FolderVO.class));
+        return Result.ok(CopyTools.copyList(fileInfoList, FolderVO.class));
     }
 
     public void getImage(HttpServletResponse response, String imageFolder, String imageName) {
@@ -125,7 +123,7 @@ public class CommonFileController {
 
         redisComponent.saveDownloadCode(code, downloadFileDto);
 
-        return getSuccessResponseVO(code);
+        return Result.ok(code);
     }
 
     protected void download(HttpServletRequest request, HttpServletResponse response, String code) throws Exception {

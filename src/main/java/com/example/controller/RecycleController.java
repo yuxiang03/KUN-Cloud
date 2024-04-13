@@ -31,20 +31,20 @@ public class RecycleController{
         query.setOrderBy("recovery_time desc");
         query.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
         PaginationResultVO result = fileInfoService.findListByPage(query);
-        return getSuccessResult(convert2PaginationVO(result, FileInfoVO.class));
+        return Result.ok(convert2PaginationVO(result, FileInfoVO.class));
     }
 
     @RequestMapping("/recoverFile")
     public Result recoverFile(HttpSession session,String fileIds) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.recoverFileBatch(webUserDto.getUserId(), fileIds);
-        return getSuccessResult(null);
+        return Result.ok(null);
     }
 
     @RequestMapping("/delFile")
     public Result delFile(HttpSession session,String fileIds) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.delFileBatch(webUserDto.getUserId(), fileIds,false);
-        return getSuccessResult(null);
+        return Result.ok(null);
     }
 }

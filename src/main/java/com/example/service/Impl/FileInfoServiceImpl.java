@@ -16,6 +16,7 @@ import com.example.entity.vo.PaginationResultVO;
 import com.example.mapper.UserMapper;
 import com.example.mapper.FileInfoMapper;
 import com.example.service.FileInfoService;
+import com.example.utils.UserHolder;
 import jakarta.annotation.Resource;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.context.annotation.Lazy;
@@ -37,12 +38,15 @@ import java.util.stream.Collectors;
  * 文件信息 业务接口实现
  */
 @Service
-public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapple,FileInfo> implements FileInfoService {
+public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> implements FileInfoService {
     @Resource
     private AppConfig appConfig;
 
     @Resource
     private UserMapper userInfoMapper;
+
+    @Resource
+    private FileInfoMapper fileInfoMapper;
 
     @Override
     public List<FileInfo> findListByParam(FileInfoQuery param) {
@@ -58,13 +62,18 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapple,FileInfo> im
      * 分页查询方法
      */
     @Override
-    public PaginationResultVO<FileInfo> findListByPage(FileInfoQuery param) {
-        int count = this.findCountByParam(param);
-        int pageSize = param.getPageSize() == null ? PageSize.SIZE15.getSize() : param.getPageSize();
-
-        SimplePage page = new SimplePage(param.getPageNo(), count, pageSize);
-        param.setSimplePage(page);
-        List<FileInfo> list = this.findListByParam(param);
+    public PaginationResultVO<FileInfo> findListByPage(Integer pageNo, Integer pageSize) {
+        FileInfoQuery query = new FileInfoQuery();
+        query.setPageSize(pageSize);
+        query.setPageNo(pageNo);
+        query.setUserId(UserHolder.getUser().getUserId().toString());
+        query.setOrderBy("recovery_time desc");
+        query.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
+        int count = this.findCountByParam(query);
+        int pagesize = query.getPageSize() == null ? PageSize.SIZE15.getSize() : query.getPageSize();
+        SimplePage page = new SimplePage(query.getPageNo(), count, pagesize);
+        query.setSimplePage(page);
+        List<FileInfo> list = this.findListByParam(query);
         PaginationResultVO<FileInfo> result = new PaginationResultVO(count, page.getPageSize(), page.getPageNo(), page.getPageTotal(), list);
         return result;
     }
@@ -85,7 +94,12 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapple,FileInfo> im
         if (listBean == null || listBean.isEmpty()) {
             return 0;
         }
-        return this.fileInfoMapper.insertBatch(listBean);
+        int count=0;
+        for (FileInfo fileInfo : listBean) {
+            fileInfoMapper.insert(fileInfo);
+            count++;
+        }
+        return count;
     }
 
     /**
@@ -104,6 +118,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapple,FileInfo> im
      */
     @Override
     public FileInfo getFileInfoByFileIdAndUserId(String fileId, String userId) {
+        fileInfoMapper
         return fileInfoMapper.selectByFileIdAndUserId(fileId, userId);
     }
 

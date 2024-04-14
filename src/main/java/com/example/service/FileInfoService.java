@@ -1,7 +1,7 @@
 package com.example.service;
 
 import com.example.entity.dto.SessionWebUserDto;
-import com.example.entity.dto.UploadResultDto;
+
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.PaginationResultVO;
@@ -13,7 +13,7 @@ public interface FileInfoService {
     List<FileInfo> findListByParam(FileInfoQuery param);
     Integer findCountByParam(FileInfoQuery param);
 
-    PaginationResultVO<FileInfo> findListByPage(FileInfoQuery param);
+    PaginationResultVO<FileInfo> findListByPage(Integer pageNo, Integer pageSize);
 
     Integer add(FileInfo bean);
 

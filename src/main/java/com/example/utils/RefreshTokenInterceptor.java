@@ -2,12 +2,17 @@ package com.example.utils;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
+import com.example.entity.po.UserInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
+
+import static com.example.utils.RedisContants.LOGIN_TOKEN_KEY;
+import static com.example.utils.RedisContants.LOGIN_TOKEN_TTL;
 
 public class RefreshTokenInterceptor implements HandlerInterceptor {
 
@@ -29,8 +34,8 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         if (entries.isEmpty()){
             return true;
         }
-        UserDTO userDTO = BeanUtil.fillBeanWithMap(entries, new UserDTO(), false);
-        UserHolder.saveUser(userDTO);
+        UserInfo UserInfo = BeanUtil.fillBeanWithMap(entries, new UserInfo(), false);
+        UserHolder.saveUser(UserInfo);
         stringRedisTemplate.expire(LOGIN_TOKEN_KEY + token,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
         return true;
     }

@@ -7,11 +7,11 @@ import com.example.entity.dto.DownloadFileDto;
 import com.example.entity.dto.Result;
 import com.example.entity.enums.FileCategoryEnums;
 import com.example.entity.enums.FileFolderTypeEnums;
-import com.example.entity.enums.ResponseCodeEnum;
+
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FolderVO;
-import com.example.entity.vo.ResponseVO;
+
 import com.example.service.FileInfoService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -34,7 +34,7 @@ public class CommonFileController {
     private RedisComponent redisComponent;
 
 
-    public ResponseVO getFolderInfo(String path, String userId) {
+    public Result getFolderInfo(String path, String userId) {
         String[] pathArray = path.split("/");
         FileInfoQuery infoQuery = new FileInfoQuery();
         infoQuery.setUserId(userId);
@@ -43,7 +43,7 @@ public class CommonFileController {
         String orderBy = "field(file_id,\"" + StringUtils.join(pathArray, "\",\"") + "\")";
         infoQuery.setOrderBy(orderBy);
         List<FileInfo> fileInfoList = fileInfoService.findListByParam(infoQuery);
-        return getSuccessResponseVO(CopyTools.copyList(fileInfoList, FolderVO.class));
+        return Result.ok(CopyTools.copyList(fileInfoList, FolderVO.class));
     }
 
     public void getImage(HttpServletResponse response, String imageFolder, String imageName) {
@@ -136,7 +136,7 @@ public class CommonFileController {
         String filePath = appConfig.getProjectFolder() + Constants.FILE_FOLDER_FILE + downloadFileDto.getFilePath();
         String fileName = downloadFileDto.getFileName();
         response.setContentType("application/x-msdownload; charset=UTF-8");
-        if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0) {//IE浏览器
+        if (request.getHeader("User-Agent").toLowerCase().indexOf("msie") > 0) {
             fileName = URLEncoder.encode(fileName, "UTF-8");
         } else {
             fileName = new String(fileName.getBytes("UTF-8"), "ISO8859-1");

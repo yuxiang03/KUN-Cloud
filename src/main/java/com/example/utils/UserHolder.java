@@ -1,13 +1,15 @@
 package com.example.utils;
 
-public class UserHolder {
-    private static final ThreadLocal<UserDTO> tl = new ThreadLocal<>();
+import com.example.entity.po.UserInfo;
 
-    public static void saveUser(UserDTO user){
+public class UserHolder {
+    private static final ThreadLocal<UserInfo> tl = new ThreadLocal<>();
+
+    public static void saveUser(UserInfo user){
         tl.set(user);
     }
 
-    public static UserDTO getUser(){
+    public static UserInfo getUser(){
         return tl.get();
     }
 

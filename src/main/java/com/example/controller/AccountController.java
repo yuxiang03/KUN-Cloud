@@ -24,11 +24,8 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-<<<<<<< HEAD
-=======
 
 import static com.example.utils.RedisContants.LOGIN_TOKEN_KEY;
->>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
 
 @RestController
 public class AccountController{
@@ -58,10 +55,6 @@ public class AccountController{
         vCode.write(response.getOutputStream());
     }
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
     @RequestMapping("/sendEmailCode")
     public Result sendEmailCode(HttpSession session,
                                     String email,
@@ -98,15 +91,8 @@ public class AccountController{
     }
     
     @PostMapping("/login")
-<<<<<<< HEAD
     public Result login(@RequestBody LoginFormDTO loginForm){
         return userService.login(loginForm);
-=======
-    public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
-        return userService.login(loginForm,session);
-
->>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
-    }
 
     @RequestMapping("/resetPwd")
     public Result resetPwd(HttpSession session,
@@ -175,14 +161,9 @@ public class AccountController{
     }
 
     @RequestMapping("/logout")
-<<<<<<< HEAD
     public Result logout(@RequestBody LoginFormDTO loginForm) {
-        return userService.logout(loginForm);
-=======
-    public Result logout(HttpSession session) {
         stringRedisTemplate.delete(LOGIN_TOKEN_KEY);
         return Result.ok(null);
->>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
     }
 
     @RequestMapping("/updateUserAvatar")

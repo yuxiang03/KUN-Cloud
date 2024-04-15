@@ -36,12 +36,6 @@ import java.util.stream.Collectors;
  */
 @Service
 public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> implements FileInfoService {
-<<<<<<< HEAD
-=======
-    @Resource
-    private AppConfig appConfig;
-
->>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
     @Resource
     private UserMapper userInfoMapper;
 
@@ -66,7 +60,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         FileInfoQuery query = new FileInfoQuery();
         query.setPageSize(pageSize);
         query.setPageNo(pageNo);
-        query.setUserId(UserHolder.getUser().getUserId().toString());
+        query.setUserId(UserHolder.getUser().getId().toString());
         query.setOrderBy("recovery_time desc");
         query.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
         int count = this.findCountByParam(query);

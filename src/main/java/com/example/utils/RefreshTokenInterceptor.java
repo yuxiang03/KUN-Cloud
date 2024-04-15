@@ -2,11 +2,7 @@ package com.example.utils;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-<<<<<<< HEAD
 import com.example.entity.dto.UserDTO;
-=======
-import com.example.entity.po.UserInfo;
->>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -38,8 +34,8 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
         if (entries.isEmpty()){
             return true;
         }
-        UserInfo UserInfo = BeanUtil.fillBeanWithMap(entries, new UserInfo(), false);
-        UserHolder.saveUser(UserInfo);
+        UserDTO user = BeanUtil.fillBeanWithMap(entries, new UserDTO(), false);
+        UserHolder.saveUser(user);
         stringRedisTemplate.expire(LOGIN_TOKEN_KEY + token,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
         return true;
     }

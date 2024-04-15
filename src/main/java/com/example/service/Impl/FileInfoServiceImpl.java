@@ -2,14 +2,11 @@ package com.example.service.Impl;
 
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.example.entity.config.AppConfig;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
-import com.example.entity.dto.UserSpaceDto;
 import com.example.entity.enums.*;
 import com.example.entity.po.FileInfo;
-import com.example.entity.po.UserInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.query.SimplePage;
 import com.example.entity.vo.PaginationResultVO;
@@ -37,10 +34,7 @@ import java.util.stream.Collectors;
  * 文件信息 业务接口实现
  */
 @Service
-public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapple,FileInfo> implements FileInfoService {
-    @Resource
-    private AppConfig appConfig;
-
+public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> implements FileInfoService {
     @Resource
     private UserMapper userInfoMapper;
 
@@ -74,7 +68,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapple,FileInfo> im
      */
     @Override
     public Integer add(FileInfo bean) {
-        return this.fileInfoMapper.insert(bean);
+        return save(bean);
     }
 
     /**

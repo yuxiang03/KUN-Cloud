@@ -25,7 +25,6 @@ import java.util.List;
 public class FileInfoController extends CommonFileController {
 
     @RequestMapping("/loadDataList")
-
     public Result loadDataList(HttpSession session, FileInfoQuery query, String category) {
         FileCategoryEnums categoryEnum = FileCategoryEnums.getByCode(category);
         if (null != categoryEnum) {

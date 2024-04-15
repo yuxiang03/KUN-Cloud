@@ -5,7 +5,6 @@ import com.example.entity.dto.CreateImageCode;
 import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
-import com.example.entity.enums.VerifyRegexEnum;
 import com.example.entity.po.User;
 import com.example.service.UserService;
 import jakarta.annotation.Resource;
@@ -21,10 +20,6 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.io.UnsupportedEncodingException;
-import java.net.URLEncoder;
-import java.util.HashMap;
-import java.util.Map;
 
 @RestController
 public class AccountController{
@@ -52,13 +47,6 @@ public class AccountController{
         vCode.write(response.getOutputStream());
     }
 
-    /**
-     * @Description: 发送邮箱验证码
-     * @auther: laoluo
-     * @date: 20:39 2023/4/1
-     * @param: [session, email, checkCode, type]
-     * @return: com.easypan.entity.vo.ResponseVO
-     */
     @RequestMapping("/sendEmailCode")
     public Result sendEmailCode(HttpSession session,
                                     String email,
@@ -66,7 +54,7 @@ public class AccountController{
                                     Integer type) {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY_EMAIL))) {
-                throw new BusinessException("图片验证码不正确");
+                return Result.fail("图片验证码不正确");
             }
             emailCodeService.sendEmailCode(email, type);
             return Result.ok(null);
@@ -95,8 +83,8 @@ public class AccountController{
     }
     
     @PostMapping("/login")
-    public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
-        return userService.login(loginForm,session);
+    public Result login(@RequestBody LoginFormDTO loginForm){
+        return userService.login(loginForm);
     }
 
     @RequestMapping("/resetPwd")
@@ -166,9 +154,8 @@ public class AccountController{
     }
 
     @RequestMapping("/logout")
-    public Result logout(HttpSession session) {
-        session.invalidate();
-        return Result.ok(null);
+    public Result logout(@RequestBody LoginFormDTO loginForm) {
+        return userService.logout(loginForm);
     }
 
     @RequestMapping("/updateUserAvatar")
@@ -186,9 +173,8 @@ public class AccountController{
             logger.error("上传头像失败", e);
         }
 
-        User userInfo = new User();
-        userInfo.setQqAvatar("");
-        userService.updateUserInfoByUserId(userInfo, webUserDto.getUserId());
+        User user = new User();
+        userService.updateUserInfoByUserId(user, webUserDto.getUserId());
         webUserDto.setAvatar(null);
         session.setAttribute(Constants.SESSION_KEY, webUserDto);
         return Result.ok(null);

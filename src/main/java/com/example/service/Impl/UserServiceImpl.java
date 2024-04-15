@@ -11,7 +11,6 @@ import com.example.mapper.UserMapper;
 import com.example.service.UserService;
 import com.example.utils.RegexUtils;
 import jakarta.annotation.Resource;
-import jakarta.servlet.http.HttpSession;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +28,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     private StringRedisTemplate stringRedisTemplate;
 
     @Override
-    public Result login(LoginFormDTO loginForm, HttpSession session) {
+    public Result login(LoginFormDTO loginForm) {
         String account = loginForm.getAccount();
         if(RegexUtils.isPhoneInvalid(account)||RegexUtils.isEmailInvalid(account)) return Result.fail("格式错误");
         Object cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY+account);
@@ -48,5 +47,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         stringRedisTemplate.opsForHash().putAll(tokenKey,map);
         stringRedisTemplate.expire(tokenKey,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
         return Result.ok(token);
+    }
+
+    @Override
+    public Result logout(LoginFormDTO loginForm) {
+        return Result.ok();
     }
 }

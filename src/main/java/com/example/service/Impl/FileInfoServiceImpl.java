@@ -123,7 +123,6 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
      */
     @Override
     public FileInfo getFileInfoByFileIdAndUserId(String fileId, String userId) {
-        fileInfoMapper
         return fileInfoMapper.selectByFileIdAndUserId(fileId, userId);
     }
 

@@ -9,8 +9,8 @@ import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.UserDTO;
 import com.example.entity.enums.UserStatusEnum;
-import com.example.entity.po.User;
 import com.example.entity.po.Register;
+import com.example.entity.po.User;
 import com.example.mapper.UserMapper;
 import com.example.service.EmailCodeService;
 import com.example.service.UserService;
@@ -61,7 +61,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     }
 
     @Override
-    public Result logout(LoginFormDTO loginForm) {
+    public Result logout(String token) {
+        String tokenKey = LOGIN_TOKEN_KEY+token;
+        stringRedisTemplate.delete(tokenKey);
         return Result.ok();
     }
 
@@ -93,5 +95,41 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         user.setUseSpace(0L);
         save(user);
         return Result.ok(null);
+    }
+
+    @Override
+    public Result resetPwd(String email, String password, String emailCode) {
+        QueryWrapper<User> queryWrapper=new QueryWrapper<>();
+        QueryWrapper<User> em = queryWrapper.eq("email",email);
+        User user = getOne(em);
+        if (null == user) {
+            return Result.fail("邮箱账号不存在");
+        }
+        //校验邮箱验证码
+        emailCodeService.checkCode(email, emailCode);
+
+        User updateuser = new User();
+        updateuser.setPassword(MD5Utils.encrypt(password));
+        QueryWrapper<User> wrapper=new QueryWrapper<>();
+        wrapper.eq("email",email);
+        update(updateuser,wrapper);
+        return Result.ok(null);
+    }
+
+    @Override
+    public Result getUserInfo(String token) {
+        String tokenKey = LOGIN_TOKEN_KEY+token;
+        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(tokenKey);
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(entries, new UserDTO(), true);
+        return Result.ok(userDTO);
+    }
+
+    @Override
+    public Result getUseSpace(String token) {
+        String tokenKey = LOGIN_TOKEN_KEY+token;
+        Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(tokenKey);
+        UserDTO userDTO = BeanUtil.fillBeanWithMap(entries, new UserDTO(), true);
+        Long useSpace = userDTO.getUseSpace();
+        return Result.ok(useSpace);
     }
 }

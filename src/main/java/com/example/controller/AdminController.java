@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-@RestController("adminController")
+@RestController
 @RequestMapping("/admin")
 public class AdminController extends CommonFileController {
 
@@ -33,7 +33,7 @@ public class AdminController extends CommonFileController {
 
     @RequestMapping("/getSysSettings")
     public Result getSysSettings() {
-        return getSuccessResult(redisComponent.getSysSettingsDto());
+        return Result.ok(redisComponent.getSysSettingsDto());
     }
 
 
@@ -47,27 +47,27 @@ public class AdminController extends CommonFileController {
         sysSettingsDto.setRegisterEmailContent(registerEmailContent);
         sysSettingsDto.setUserInitUseSpace(userInitUseSpace);
         redisComponent.saveSysSettingsDto(sysSettingsDto);
-        return getSuccessResult(null);
+        return Result.ok(null);
     }
 
     @RequestMapping("/loadUserList")
     public Result loadUser(UserInfoQuery userInfoQuery) {
         userInfoQuery.setOrderBy("join_time desc");
         PaginationResultVO resultVO = userInfoService.findListByPage(userInfoQuery);
-        return getSuccessResult(convert2PaginationVO(resultVO, UserInfoVO.class));
+        return Result.ok(convert2PaginationVO(resultVO, UserInfoVO.class));
     }
 
 
     @RequestMapping("/updateUserStatus")
     public Result updateUserStatus( String userId,  Integer status) {
         userInfoService.updateUserStatus(userId, status);
-        return getSuccessResult(null);
+        return Result.ok(null);
     }
 
     @RequestMapping("/updateUserSpace")
     public Result updateUserSpace( String userId,  Integer changeSpace) {
         userInfoService.changeUserSpace(userId, changeSpace);
-        return getSuccessResult(null);
+        return Result.ok(null);
     }
 
     /**
@@ -81,7 +81,7 @@ public class AdminController extends CommonFileController {
         query.setOrderBy("last_update_time desc");
         query.setQueryNickName(true);
         PaginationResultVO resultVO = fileInfoService.findListByPage(query);
-        return getSuccessResult(resultVO);
+        return Result.ok(resultVO);
     }
 
     @RequestMapping("/getFolderInfo")
@@ -132,6 +132,6 @@ public class AdminController extends CommonFileController {
             String[] itemArray = fileIdAndUserId.split("_");
             fileInfoService.delFileBatch(itemArray[0], itemArray[1], true);
         }
-        return getSuccessResult(null);
+        return Result.ok(null);
     }
 }

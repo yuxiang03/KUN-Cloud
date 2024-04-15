@@ -23,6 +23,12 @@ public class RecycleController{
      * 根据条件分页查询
      */
     @RequestMapping("/loadRecycleList")
+<<<<<<< HEAD
+    public Result loadRecycleList(Integer pageNo, Integer pageSize) {
+
+        PaginationResultVO result = fileInfoService.findListByPage(pageNo,pageSize);
+        return getSuccessResult(convert2PaginationVO(result, FileInfoVO.class));
+=======
     public Result loadRecycleList(HttpSession session, Integer pageNo, Integer pageSize) {
         FileInfoQuery query = new FileInfoQuery();
         query.setPageSize(pageSize);
@@ -32,6 +38,7 @@ public class RecycleController{
         query.setDelFlag(FileDelFlagEnums.RECYCLE.getFlag());
         PaginationResultVO result = fileInfoService.findListByPage(query);
         return Result.ok(convert2PaginationVO(result, FileInfoVO.class));
+>>>>>>> origin/main
     }
 
     @RequestMapping("/recoverFile")

@@ -80,7 +80,11 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/getFolderInfo")
+<<<<<<< HEAD
+    public Result getFolderInfo(HttpSession session, @VerifyParam(required = true) String path) {
+=======
     public Result getFolderInfo(HttpSession session, String path) {
+>>>>>>> origin/main
         return super.getFolderInfo(path, getUserInfoFromSession(session).getUserId());
     }
 

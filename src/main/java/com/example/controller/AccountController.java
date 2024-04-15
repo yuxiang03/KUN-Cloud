@@ -1,17 +1,21 @@
 package com.example.controller;
 
+import cn.hutool.jwt.JWT;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.CreateImageCode;
 import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.po.User;
+import com.example.service.EmailCodeService;
 import com.example.service.UserService;
+import io.jsonwebtoken.Jwts;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -20,6 +24,11 @@ import org.springframework.web.multipart.MultipartFile;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+<<<<<<< HEAD
+=======
+
+import static com.example.utils.RedisContants.LOGIN_TOKEN_KEY;
+>>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
 
 @RestController
 public class AccountController{
@@ -29,6 +38,8 @@ public class AccountController{
     private UserService userService;
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+    @Autowired
+    private EmailCodeService emailCodeService;
 
     @RequestMapping(value = "/checkCode")
     public void checkCode(HttpServletResponse response, HttpSession session, Integer type) throws
@@ -47,6 +58,10 @@ public class AccountController{
         vCode.write(response.getOutputStream());
     }
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
     @RequestMapping("/sendEmailCode")
     public Result sendEmailCode(HttpSession session,
                                     String email,
@@ -83,8 +98,14 @@ public class AccountController{
     }
     
     @PostMapping("/login")
+<<<<<<< HEAD
     public Result login(@RequestBody LoginFormDTO loginForm){
         return userService.login(loginForm);
+=======
+    public Result login(@RequestBody LoginFormDTO loginForm, HttpSession session){
+        return userService.login(loginForm,session);
+
+>>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
     }
 
     @RequestMapping("/resetPwd")
@@ -154,8 +175,14 @@ public class AccountController{
     }
 
     @RequestMapping("/logout")
+<<<<<<< HEAD
     public Result logout(@RequestBody LoginFormDTO loginForm) {
         return userService.logout(loginForm);
+=======
+    public Result logout(HttpSession session) {
+        stringRedisTemplate.delete(LOGIN_TOKEN_KEY);
+        return Result.ok(null);
+>>>>>>> 59b93a7cd221e063e4ec15b94853a76ca185bdee
     }
 
     @RequestMapping("/updateUserAvatar")

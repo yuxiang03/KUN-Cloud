@@ -9,6 +9,7 @@ import com.example.entity.dto.UserDTO;
 import com.example.entity.po.User;
 import com.example.mapper.UserMapper;
 import com.example.service.UserService;
+import com.example.utils.JwtUtils;
 import com.example.utils.RegexUtils;
 import jakarta.annotation.Resource;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -16,7 +17,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 import static com.example.utils.RedisContants.*;
@@ -37,15 +37,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         if(code==null||!cacheCode.toString().equals(code)) return Result.fail("验证码错误");
         User user = query().eq("phone", account).or().eq("email",account).one();
         if (user==null) Result.fail("用户未注册");
-        String token = UUID.randomUUID().toString();
         UserDTO userDTO = BeanUtil.copyProperties(user, UserDTO.class);
         Map<String, Object> map = BeanUtil.beanToMap(userDTO,new HashMap<>(),
                 CopyOptions.create()
                         .setIgnoreNullValue(true)
                         .setFieldValueEditor((fieldName,fieldValue)->fieldValue.toString()));
+        String token = JwtUtils.generateJwt(map);
         String tokenKey = LOGIN_TOKEN_KEY+token;
         stringRedisTemplate.opsForHash().putAll(tokenKey,map);
         stringRedisTemplate.expire(tokenKey,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
+        stringRedisTemplate.opsForValue().set(LOGIN_TOKEN_KEY,token);
+        stringRedisTemplate.expire(LOGIN_TOKEN_KEY,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
         return Result.ok(token);
     }
 

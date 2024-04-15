@@ -12,6 +12,7 @@ import com.example.entity.vo.FileInfoVO;
 import com.example.entity.vo.PaginationResultVO;
 import com.example.entity.vo.ShareInfoVO;
 import com.example.service.FileInfoService;
+import com.example.service.FileShareService;
 import com.example.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;

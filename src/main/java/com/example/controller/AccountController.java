@@ -1,6 +1,5 @@
 package com.example.controller;
 
-import cn.hutool.jwt.JWT;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.CreateImageCode;
 import com.example.entity.dto.LoginFormDTO;
@@ -9,7 +8,6 @@ import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.po.User;
 import com.example.service.EmailCodeService;
 import com.example.service.UserService;
-import io.jsonwebtoken.Jwts;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -56,10 +54,7 @@ public class AccountController{
     }
 
     @RequestMapping("/sendEmailCode")
-    public Result sendEmailCode(HttpSession session,
-                                    String email,
-                                    String checkCode,
-                                    Integer type) {
+    public Result sendEmailCode() {
         try {
             if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY_EMAIL))) {
                 return Result.fail("图片验证码不正确");

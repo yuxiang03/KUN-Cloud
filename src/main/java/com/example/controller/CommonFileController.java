@@ -1,22 +1,13 @@
 package com.example.controller;
 
-import com.example.entity.config.AppConfig;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.DownloadFileDto;
 import com.example.entity.dto.Result;
 import com.example.entity.enums.FileCategoryEnums;
 import com.example.entity.enums.FileFolderTypeEnums;
-<<<<<<< HEAD
-
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FolderVO;
-
-=======
-import com.example.entity.po.FileInfo;
-import com.example.entity.query.FileInfoQuery;
-import com.example.entity.vo.FolderVO;
->>>>>>> origin/main
 import com.example.service.FileInfoService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;

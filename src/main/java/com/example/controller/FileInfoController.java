@@ -2,13 +2,12 @@ package com.example.controller;
 
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
-import com.example.entity.enums.FileCategoryEnums;
 import com.example.entity.enums.FileDelFlagEnums;
 import com.example.entity.enums.FileFolderTypeEnums;
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FileInfoVO;
-import com.example.entity.vo.PaginationResultVO;
+import com.example.entity.vo.FolderVO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -26,30 +25,12 @@ public class FileInfoController extends CommonFileController {
 
     @RequestMapping("/loadDataList")
     public Result loadDataList(HttpSession session, FileInfoQuery query, String category) {
-        FileCategoryEnums categoryEnum = FileCategoryEnums.getByCode(category);
-        if (null != categoryEnum) {
-            query.setFileCategory(categoryEnum.getCategory());
-        }
-        query.setUserId(getUserInfoFromSession(session).getUserId());
-        query.setOrderBy("last_update_time desc");
-        query.setDelFlag(FileDelFlagEnums.USING.getFlag());
-        PaginationResultVO result = fileInfoService.findListByPage(query);
-        return Result.ok(convert2PaginationVO(result, FileInfoVO.class));
+        return fileInfoService.findListByPage(query);
     }
 
     @RequestMapping("/uploadFile")
-    public Result uploadFile(HttpSession session,
-                             String fileId,
-                             MultipartFile file,
-                             String fileName,
-                             String filePid,
-                             String fileMd5,
-                             Integer chunkIndex,
-                             Integer chunks) {
-
-        SessionWebUserDto webUserDto = getUserInfoFromSession(session);
-        UploadResultDto resultDto = fileInfoService.uploadFile(webUserDto, fileId, file, fileName, filePid, fileMd5, chunkIndex, chunks);
-        return Result.ok(resultDto);
+    public Result uploadFile(FileInfoVO fileInfoVO, HttpSession session) {
+        return fileInfoService.uploadFile(fileInfoVO,session);
     }
 
 
@@ -71,21 +52,13 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/newFoloder")
-    public Result newFoloder(HttpSession session,
-                                 String filePid,
-                                 String fileName) {
-        SessionWebUserDto webUserDto = getUserInfoFromSession(session);
-        FileInfo fileInfo = fileInfoService.newFolder(filePid, webUserDto.getUserId(), fileName);
-        return Result.ok(fileInfo);
+    public Result newFoloder(FolderVO folderVO) {
+        return fileInfoService.newFolder(folderVO);
     }
 
     @RequestMapping("/getFolderInfo")
-<<<<<<< HEAD
-    public Result getFolderInfo(HttpSession session, @VerifyParam(required = true) String path) {
-=======
-    public Result getFolderInfo(HttpSession session, String path) {
->>>>>>> origin/main
-        return super.getFolderInfo(path, getUserInfoFromSession(session).getUserId());
+    public Result getFolderInfo(String path) {
+        return Result.ok(path, getUserInfoFromSession(session).getUserId());
     }
 
 
@@ -94,8 +67,7 @@ public class FileInfoController extends CommonFileController {
                              String fileId,
                              String fileName) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
-        FileInfo fileInfo = fileInfoService.rename(fileId, webUserDto.getUserId(), fileName);
-        return Result.ok(CopyTools.copy(fileInfo, FileInfoVO.class));
+        return fileInfoService.rename(fileId, webUserDto.getUserId(), fileName);
     }
 
     @RequestMapping("/loadAllFolder")

@@ -1,8 +1,6 @@
 package com.example.utils;
 
-import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
-import com.example.entity.dto.UserDTO;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.data.redis.core.StringRedisTemplate;
@@ -30,18 +28,17 @@ public class RefreshTokenInterceptor implements HandlerInterceptor {
             return true;
         }
         String tokenKey = LOGIN_TOKEN_KEY + token;
+        // TODO
         Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(tokenKey);
         if (entries.isEmpty()){
             return true;
         }
-        UserDTO user = BeanUtil.fillBeanWithMap(entries, new UserDTO(), false);
-        UserHolder.saveUser(user);
         stringRedisTemplate.expire(LOGIN_TOKEN_KEY + token,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
         return true;
     }
 
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
-        UserHolder.removeUser();
+
     }
 }

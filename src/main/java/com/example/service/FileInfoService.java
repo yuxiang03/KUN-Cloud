@@ -1,11 +1,12 @@
 package com.example.service;
 
-import com.example.entity.dto.SessionWebUserDto;
-
+import com.example.entity.dto.Result;
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
+import com.example.entity.vo.FileInfoVO;
+import com.example.entity.vo.FolderVO;
 import com.example.entity.vo.PaginationResultVO;
-import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
 
@@ -15,7 +16,7 @@ public interface FileInfoService {
 
     PaginationResultVO<FileInfo> findListByPage(Integer pageNo, Integer pageSize);
 
-    Integer add(FileInfo bean);
+    boolean add(FileInfo bean);
 
     Integer addBatch(List<FileInfo> listBean);
 
@@ -27,12 +28,11 @@ public interface FileInfoService {
 
     Integer deleteFileInfoByFileIdAndUserId(String fileId, String userId);
 
-    UploadResultDto uploadFile(SessionWebUserDto webUserDto, String fileId, MultipartFile file, String fileName, String filePid, String fileMd5, Integer chunkIndex,
-                               Integer chunks);
+    Result uploadFile(FileInfoVO fileInfoVO, HttpSession session);
 
-    FileInfo rename(String fileId, String userId, String fileName);
+    Result rename(String fileId, String userId, String fileName);
 
-    FileInfo newFolder(String filePid, String userId, String folderName) throws Exception;
+    Result newFolder(FolderVO folderVO);
 
     void changeFileFolder(String fileIds, String filePid, String userId);
 
@@ -45,8 +45,4 @@ public interface FileInfoService {
     void checkRootFilePid(String rootFilePid, String userId, String fileId);
 
     void saveShare(String shareRootFilePid, String shareFileIds, String myFolderId, String shareUserId, String cureentUserId);
-
-    Long getUserUseSpace(@Param("userId") String userId);
-
-    void deleteFileByUserId(@Param("userId") String userId);
 }

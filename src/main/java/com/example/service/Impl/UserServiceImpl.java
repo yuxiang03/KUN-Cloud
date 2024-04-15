@@ -46,8 +46,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         String tokenKey = LOGIN_TOKEN_KEY+token;
         stringRedisTemplate.opsForHash().putAll(tokenKey,map);
         stringRedisTemplate.expire(tokenKey,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
-        stringRedisTemplate.opsForValue().set(LOGIN_TOKEN_KEY,token);
-        stringRedisTemplate.expire(LOGIN_TOKEN_KEY,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
         return Result.ok(token);
     }
 

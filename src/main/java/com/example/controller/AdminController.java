@@ -57,7 +57,6 @@ public class AdminController extends CommonFileController {
         return Result.ok(convert2PaginationVO(resultVO, UserInfoVO.class));
     }
 
-
     @RequestMapping("/updateUserStatus")
     public Result updateUserStatus( String userId,  Integer status) {
         userInfoService.updateUserStatus(userId, status);

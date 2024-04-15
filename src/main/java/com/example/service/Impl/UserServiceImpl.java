@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
+import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.dto.UserDTO;
 import com.example.entity.enums.UserStatusEnum;
 import com.example.entity.po.Register;
@@ -18,6 +19,7 @@ import com.example.utils.JwtUtils;
 import com.example.utils.MD5Utils;
 import com.example.utils.RegexUtils;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
@@ -131,5 +133,15 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         UserDTO userDTO = BeanUtil.fillBeanWithMap(entries, new UserDTO(), true);
         Long useSpace = userDTO.getUseSpace();
         return Result.ok(useSpace);
+    }
+
+    @Override
+    public void updatePwdByUserId(HttpSession session, String password) {
+        SessionWebUserDto webUserDto = (SessionWebUserDto) session.getAttribute(Constants.SESSION_KEY);
+        User user = new User();
+        user.setPassword(MD5Utils.encrypt(user.getPassword()));
+        QueryWrapper<User> wrapper=new QueryWrapper<>();
+        wrapper.eq("user_id",webUserDto.getUserId());
+        update(user,wrapper);
     }
 }

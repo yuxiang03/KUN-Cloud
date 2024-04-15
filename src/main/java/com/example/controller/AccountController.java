@@ -169,12 +169,8 @@ public class AccountController{
 
     //更新密码
     @RequestMapping("/updatePassword")
-    public Result updatePassword(HttpSession session,
-                                     String password) {
-        SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
-        User user = new User();
-        user.setPassword(StringTools.encodeByMD5(password));
-        userService.updateUserInfoByUserId(userInfo, sessionWebUserDto.getUserId());
+    public Result updatePassword(HttpSession session, String password) {
+        userService.updatePwdByUserId(session,password);
         return Result.ok(null);
     }
 }

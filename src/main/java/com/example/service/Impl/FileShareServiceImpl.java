@@ -1,5 +1,6 @@
 package com.example.service.Impl;
 
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.SessionShareDto;
 import com.example.entity.enums.PageSize;
@@ -8,6 +9,7 @@ import com.example.entity.po.FileShare;
 import com.example.entity.query.FileShareQuery;
 import com.example.entity.query.SimplePage;
 import com.example.entity.vo.PaginationResultVO;
+import com.example.mapper.FileShareMapper;
 import com.example.service.FileShareService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
@@ -19,7 +21,7 @@ import java.util.List;
  * 分享信息 业务接口实现
  */
 @Service("fileShareService")
-public class FileShareServiceImpl implements FileShareService {
+public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare> implements FileShareService {
 
     @Resource
     private FileShareMapper fileShareMapper;
@@ -60,7 +62,7 @@ public class FileShareServiceImpl implements FileShareService {
      */
     @Override
     public Integer add(FileShare bean) {
-        return this.fileShareMapper.insert(bean);
+        return save(bean);
     }
 
     /**

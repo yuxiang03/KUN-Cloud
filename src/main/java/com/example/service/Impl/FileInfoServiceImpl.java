@@ -1,6 +1,7 @@
 package com.example.service.Impl;
 
 import cn.hutool.core.date.DateUtil;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.Result;
@@ -9,20 +10,23 @@ import com.example.entity.enums.*;
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.query.SimplePage;
+import com.example.entity.vo.FileInfoVO;
+import com.example.entity.vo.FolderVO;
 import com.example.entity.vo.PaginationResultVO;
 import com.example.mapper.UserMapper;
 import com.example.mapper.FileInfoMapper;
 import com.example.service.FileInfoService;
+import com.example.utils.RedisIdWorker;
 import com.example.utils.UserHolder;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpSession;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
-import org.springframework.context.annotation.Lazy;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,20 +35,25 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import static com.example.utils.RedisContants.LOGIN_TOKEN_KEY;
+
 /**
  * 文件信息 业务接口实现
  */
 @Service
 public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> implements FileInfoService {
     @Resource
-    private UserMapper userInfoMapper;
-
+    private UserMapper userMapper;
     @Resource
     private FileInfoMapper fileInfoMapper;
+    @Resource
+    private StringRedisTemplate stringRedisTemplate;
+    @Resource
+    private RedisIdWorker redisIdWorker;
 
     @Override
     public List<FileInfo> findListByParam(FileInfoQuery param) {
-        return listByIds(param.get)
+        return listByIds(param.get);
     }
 
     @Override
@@ -74,9 +83,10 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
 
     /**
      * 新增
+     * @return
      */
     @Override
-    public Integer add(FileInfo bean) {
+    public boolean add(FileInfo bean) {
         return save(bean);
     }
 
@@ -135,16 +145,16 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Result uploadFile(SessionWebUserDto webUserDto, String fileId, MultipartFile file, String fileName, String filePid, String fileMd5,
-                             Integer chunkIndex, Integer chunks) {
+    public Result uploadFile(FileInfoVO fileInfoVO, HttpSession session) {
         File tempFileFolder = null;
         Boolean uploadSuccess = true;
         try {
             Date curDate = new Date();
-            UserSpaceDto spaceDto = redisComponent.getUserSpaceUse(webUserDto.getUserId());
-            if (chunkIndex == 0) {
+            String tokenKey = LOGIN_TOKEN_KEY+session.getAttribute("token");
+            Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(tokenKey);
+            if (fileInfoVO.getChunkIndex() == 0) {
                 FileInfoQuery infoQuery = new FileInfoQuery();
-                infoQuery.setFileMd5(fileMd5);
+                infoQuery.setFileMd5(fileInfoVO.getFileMd5());
                 infoQuery.setSimplePage(new SimplePage(0, 1));
                 infoQuery.setStatus(FileStatusEnums.USING.getStatus());
                 List<FileInfo> dbFileList = this.fileInfoMapper.selectList(infoQuery);
@@ -153,7 +163,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
                     FileInfo dbFile = dbFileList.get(0);
                     //判断文件状态
                     if (dbFile.getFileSize() + spaceDto.getUseSpace() > spaceDto.getTotalSpace()) {
-                        throw new Exception("sss");
+                        return Result.fail("可用空间不足");
                     }
                     dbFile.setFileId(fileId);
                     dbFile.setFilePid(filePid);
@@ -186,7 +196,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
             //判断磁盘空间
             Long currentTempSize = redisComponent.getFileTempSize(webUserDto.getUserId(), fileId);
             if (file.getSize() + currentTempSize + spaceDto.getUseSpace() > spaceDto.getTotalSpace()) {
-                throw new BusinessException(ResponseCodeEnum.CODE_904);
+                return Result.fail(ResponseCodeEnum.CODE_904);
             }
 
             File newFile = new File(tempFileFolder.getPath() + "/" + chunkIndex);
@@ -234,11 +244,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
                 }
             });
             return Result.ok();
-        } catch (BusinessException e) {
-            uploadSuccess = false;
-            logger.error("文件上传失败", e);
-            throw e;
-        } catch (Exception e) {
+        }catch (Exception e) {
             uploadSuccess = false;
             logger.error("文件上传失败", e);
             throw new BusinessException("文件上传失败");
@@ -255,7 +261,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
     }
 
     private void updateUserSpace(SessionWebUserDto webUserDto, Long totalSize) {
-        Integer count = userInfoMapper.updateUserSpace(webUserDto.getUserId(), totalSize, null);
+        Integer count = userMapper.updateUserSpace(webUserDto.getUserId(), totalSize, null);
         if (count == 0) {
             throw new BusinessException(ResponseCodeEnum.CODE_904);
         }
@@ -421,13 +427,15 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public FileInfo rename(String fileId, String userId, String fileName) {
-        FileInfo fileInfo = this.fileInfoMapper.selectByFileIdAndUserId(fileId, userId);
+    public Result rename(String fileId, String userId, String fileName) {
+        QueryWrapper queryWrapper = new QueryWrapper<>();
+        queryWrapper.eq("fileId",fileId);
+        FileInfo fileInfo = getOne(queryWrapper);
         if (fileInfo == null) {
-            throw new BusinessException("文件不存在");
+            return Result.fail("文件不存在");
         }
         if (fileInfo.getFileName().equals(fileName)) {
-            return fileInfo;
+            return Result.ok(fileInfo);
         }
         String filePid = fileInfo.getFilePid();
         checkFileName(filePid, userId, fileName, fileInfo.getFolderType());
@@ -439,8 +447,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         FileInfo dbInfo = new FileInfo();
         dbInfo.setFileName(fileName);
         dbInfo.setLastUpdateTime(curDate);
-        this.fileInfoMapper.updateByFileIdAndUserId(dbInfo, fileId, userId);
-
+        update(dbInfo, query().eq("fileId",fileId));
         FileInfoQuery fileInfoQuery = new FileInfoQuery();
         fileInfoQuery.setFilePid(filePid);
         fileInfoQuery.setUserId(userId);
@@ -448,11 +455,11 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         fileInfoQuery.setDelFlag(FileDelFlagEnums.USING.getFlag());
         Integer count = this.fileInfoMapper.selectCount(fileInfoQuery);
         if (count > 1) {
-            throw new BusinessException("文件名" + fileName + "已经存在");
+            return Result.fail("文件名" + fileName + "已经存在");
         }
         fileInfo.setFileName(fileName);
         fileInfo.setLastUpdateTime(curDate);
-        return fileInfo;
+        return Result.ok(fileInfo);
     }
 
     private void checkFileName(String filePid, String userId, String fileName, Integer folderType) {
@@ -470,20 +477,20 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public FileInfo newFolder(String filePid, String userId, String folderName) throws Exception {
-        checkFileName(filePid, userId, folderName, FileFolderTypeEnums.FOLDER.getType());
+    public Result newFolder(FolderVO folderVO) {
+        checkFileName(folderVO.getFilePid(), folderVO.getUserId(), folderVO.getFileName(), FileFolderTypeEnums.FOLDER.getType());
         Date curDate = new Date();
         FileInfo fileInfo = new FileInfo();
-        fileInfo.setFileId(StringTools.getRandomString(Constants.LENGTH_10));
-        fileInfo.setUserId(userId);
-        fileInfo.setFilePid(filePid);
-        fileInfo.setFileName(folderName);
+        fileInfo.setFileId(redisIdWorker.nextId());
+        fileInfo.setUserId(folderVO.getUserId());
+        fileInfo.setFilePid(folderVO.getFilePid());
+        fileInfo.setFileName(folderVO.getFileName());
         fileInfo.setFolderType(FileFolderTypeEnums.FOLDER.getType());
         fileInfo.setCreateTime(curDate);
         fileInfo.setLastUpdateTime(curDate);
         fileInfo.setStatus(FileStatusEnums.USING.getStatus());
         fileInfo.setDelFlag(FileDelFlagEnums.USING.getFlag());
-        this.fileInfoMapper.insert(fileInfo);
+        save(fileInfo);
 
         FileInfoQuery fileInfoQuery = new FileInfoQuery();
         fileInfoQuery.setFilePid(filePid);
@@ -497,7 +504,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         }
         fileInfo.setFileName(folderName);
         fileInfo.setLastUpdateTime(curDate);
-        return fileInfo;
+        return Result.ok(fileInfo);
     }
 
     @Transactional(rollbackFor = Exception.class)
@@ -668,7 +675,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         Long useSpace = this.fileInfoMapper.selectUseSpace(userId);
         UserInfo userInfo = new UserInfo();
         userInfo.setUseSpace(useSpace);
-        this.userInfoMapper.updateByUserId(userInfo, userId);
+        this.userMapper.updateByUserId(userInfo, userId);
 
         //设置缓存
         UserSpaceDto userSpaceDto = redisComponent.getUserSpaceUse(userId);
@@ -731,13 +738,13 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
 
         //更新空间
         Long useSpace = this.fileInfoMapper.selectUseSpace(cureentUserId);
-        UserInfo dbUserInfo = this.userInfoMapper.selectByUserId(cureentUserId);
+        UserInfo dbUserInfo = this.userMapper.selectByUserId(cureentUserId);
         if (useSpace > dbUserInfo.getTotalSpace()) {
             throw new BusinessException(ResponseCodeEnum.CODE_904);
         }
         UserInfo userInfo = new UserInfo();
         userInfo.setUseSpace(useSpace);
-        this.userInfoMapper.updateByUserId(userInfo, cureentUserId);
+        this.userMapper.updateByUserId(userInfo, cureentUserId);
         //设置缓存
         UserSpaceDto userSpaceDto = redisComponent.getUserSpaceUse(cureentUserId);
         userSpaceDto.setUseSpace(useSpace);

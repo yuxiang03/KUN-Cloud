@@ -4,6 +4,7 @@ import lombok.Data;
 
 @Data
 public class FolderVO {
+    private String filePid;
+    private String userId;
     private String fileName;
-    private String fileId;
 }

@@ -26,7 +26,7 @@ public class FileInfoController extends CommonFileController {
 
     @RequestMapping("/loadDataList")
 
-    public ResponseVO loadDataList(HttpSession session, FileInfoQuery query, String category) {
+    public Result loadDataList(HttpSession session, FileInfoQuery query, String category) {
         FileCategoryEnums categoryEnum = FileCategoryEnums.getByCode(category);
         if (null != categoryEnum) {
             query.setFileCategory(categoryEnum.getCategory());
@@ -35,7 +35,7 @@ public class FileInfoController extends CommonFileController {
         query.setOrderBy("last_update_time desc");
         query.setDelFlag(FileDelFlagEnums.USING.getFlag());
         PaginationResultVO result = fileInfoService.findListByPage(query);
-        return getSuccessResponseVO(convert2PaginationVO(result, FileInfoVO.class));
+        return Result.ok(convert2PaginationVO(result, FileInfoVO.class));
     }
 
     @RequestMapping("/uploadFile")
@@ -50,7 +50,7 @@ public class FileInfoController extends CommonFileController {
 
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         UploadResultDto resultDto = fileInfoService.uploadFile(webUserDto, fileId, file, fileName, filePid, fileMd5, chunkIndex, chunks);
-        return getSuccessResponseVO(resultDto);
+        return Result.ok(resultDto);
     }
 
 
@@ -60,44 +60,48 @@ public class FileInfoController extends CommonFileController {
     }
 
     @RequestMapping("/ts/getVideoInfo/{fileId}")
-    public void getVideoInfo(HttpServletResponse response, HttpSession session, @PathVariable("fileId") @VerifyParam(required = true) String fileId) {
+    public void getVideoInfo(HttpServletResponse response, HttpSession session, @PathVariable("fileId") String fileId) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         super.getFile(response, fileId, webUserDto.getUserId());
     }
 
     @RequestMapping("/getFile/{fileId}")
-    public void getFile(HttpServletResponse response, HttpSession session, @PathVariable("fileId") @VerifyParam(required = true) String fileId) {
+    public void getFile(HttpServletResponse response, HttpSession session, @PathVariable("fileId") String fileId) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         super.getFile(response, fileId, webUserDto.getUserId());
     }
 
     @RequestMapping("/newFoloder")
-    public ResponseVO newFoloder(HttpSession session,
-                                 @VerifyParam(required = true) String filePid,
-                                 @VerifyParam(required = true) String fileName) {
+    public Result newFoloder(HttpSession session,
+                                 String filePid,
+                                 String fileName) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         FileInfo fileInfo = fileInfoService.newFolder(filePid, webUserDto.getUserId(), fileName);
-        return getSuccessResponseVO(fileInfo);
+        return Result.ok(fileInfo);
     }
 
     @RequestMapping("/getFolderInfo")
+<<<<<<< HEAD
     public Result getFolderInfo(HttpSession session, @VerifyParam(required = true) String path) {
+=======
+    public Result getFolderInfo(HttpSession session, String path) {
+>>>>>>> origin/main
         return super.getFolderInfo(path, getUserInfoFromSession(session).getUserId());
     }
 
 
     @RequestMapping("/rename")
-    public ResponseVO rename(HttpSession session,
-                             @VerifyParam(required = true) String fileId,
-                             @VerifyParam(required = true) String fileName) {
+    public Result rename(HttpSession session,
+                             String fileId,
+                             String fileName) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         FileInfo fileInfo = fileInfoService.rename(fileId, webUserDto.getUserId(), fileName);
-        return getSuccessResponseVO(CopyTools.copy(fileInfo, FileInfoVO.class));
+        return Result.ok(CopyTools.copy(fileInfo, FileInfoVO.class));
     }
 
     @RequestMapping("/loadAllFolder")
 
-    public ResponseVO loadAllFolder(HttpSession session, @VerifyParam(required = true) String filePid, String currentFileIds) {
+    public Result loadAllFolder(HttpSession session, String filePid, String currentFileIds) {
         FileInfoQuery query = new FileInfoQuery();
         query.setUserId(getUserInfoFromSession(session).getUserId());
         query.setFilePid(filePid);
@@ -108,37 +112,35 @@ public class FileInfoController extends CommonFileController {
         query.setDelFlag(FileDelFlagEnums.USING.getFlag());
         query.setOrderBy("create_time desc");
         List<FileInfo> fileInfoList = fileInfoService.findListByParam(query);
-        return getSuccessResponseVO(CopyTools.copyList(fileInfoList, FileInfoVO.class));
+        return Result.ok(CopyTools.copyList(fileInfoList, FileInfoVO.class));
     }
 
     @RequestMapping("/changeFileFolder")
-
-    public ResponseVO changeFileFolder(HttpSession session,
-                                       @VerifyParam(required = true) String fileIds,
-                                       @VerifyParam(required = true) String filePid) {
+    public Result changeFileFolder(HttpSession session,
+                                       String fileIds,
+                                       String filePid) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.changeFileFolder(fileIds, filePid, webUserDto.getUserId());
-        return getSuccessResponseVO(null);
+        return Result.ok(null);
     }
 
     @RequestMapping("/createDownloadUrl/{fileId}")
 
-    public ResponseVO createDownloadUrl(HttpSession session, @PathVariable("fileId") @VerifyParam(required = true) String fileId) {
+    public Result createDownloadUrl(HttpSession session, @PathVariable("fileId") String fileId) {
         return super.createDownloadUrl(fileId, getUserInfoFromSession(session).getUserId());
     }
 
     @RequestMapping("/download/{code}")
-    @GlobalInterceptor(checkLogin = false, checkParams = true)
-    public void download(HttpServletRequest request, HttpServletResponse response, @PathVariable("code") @VerifyParam(required = true) String code) throws Exception {
+    public void download(HttpServletRequest request, HttpServletResponse response, @PathVariable("code") String code) throws Exception {
         super.download(request, response, code);
     }
 
 
     @RequestMapping("/delFile")
 
-    public ResponseVO delFile(HttpSession session, @VerifyParam(required = true) String fileIds) {
+    public Result delFile(HttpSession session, String fileIds) {
         SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         fileInfoService.removeFile2RecycleBatch(webUserDto.getUserId(), fileIds);
-        return getSuccessResponseVO(null);
+        return Result.ok(null);
     }
 }

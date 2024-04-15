@@ -12,6 +12,7 @@ import com.example.entity.vo.FileInfoVO;
 import com.example.entity.vo.PaginationResultVO;
 import com.example.entity.vo.ShareInfoVO;
 import com.example.service.FileInfoService;
+import com.example.service.FileShareService;
 import com.example.service.UserService;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletRequest;
@@ -46,7 +47,7 @@ public class WebShareController extends CommonFileController {
     public Result getShareLoginInfo(HttpSession session, String shareId) {
         SessionShareDto shareSessionDto = getSessionShareFromSession(session, shareId);
         if (shareSessionDto == null) {
-            return getSuccessResult(null);
+            return Result.fail(null);
         }
         ShareInfoVO shareInfoVO = getShareInfoCommon(shareId);
         //判断是否是当前用户分享的文件
@@ -56,7 +57,7 @@ public class WebShareController extends CommonFileController {
         } else {
             shareInfoVO.setCurrentUser(false);
         }
-        return getSuccessResult(shareInfoVO);
+        return Result.fail(shareInfoVO);
     }
 
     /**
@@ -67,10 +68,10 @@ public class WebShareController extends CommonFileController {
      */
     @RequestMapping("/getShareInfo")
     public Result getShareInfo(String shareId) {
-        return getSuccessResult(getShareInfoCommon(shareId));
+        return Result.fail(getShareInfoCommon(shareId));
     }
 
-    private ShareInfoVO getShareInfoCommon(String shareId) {
+    private Result getShareInfoCommon(String shareId) {
         FileShare share = fileShareService.getFileShareByShareId(shareId);
         if (null == share || (share.getExpireTime() != null && new Date().after(share.getExpireTime()))) {
             throw new BusinessException(ResponseCodeEnum.CODE_902.getMsg());
@@ -102,7 +103,7 @@ public class WebShareController extends CommonFileController {
                                  String code) {
         SessionShareDto shareSessionDto = fileShareService.checkShareCode(shareId, code);
         session.setAttribute(Constants.SESSION_SHARE_KEY + shareId, shareSessionDto);
-        return getSuccessResult(null);
+        return Result.fail(null);
     }
 
     /**
@@ -127,7 +128,7 @@ public class WebShareController extends CommonFileController {
         query.setOrderBy("last_update_time desc");
         query.setDelFlag(FileDelFlagEnums.USING.getFlag());
         PaginationResultVO resultVO = fileInfoService.findListByPage(query);
-        return getSuccessResult(convert2PaginationVO(resultVO, FileInfoVO.class));
+        return Result.fail(convert2PaginationVO(resultVO, FileInfoVO.class));
     }
 
 
@@ -224,6 +225,6 @@ public class WebShareController extends CommonFileController {
             return Result.fail("自己分享的文件无法保存到自己的网盘");
         }
         fileInfoService.saveShare(shareSessionDto.getFileId(), shareFileIds, myFolderId, shareSessionDto.getShareUserId(), webUserDto.getUserId());
-        return getSuccessResult(null);
+        return Result.fail(null);
     }
 }

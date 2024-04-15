@@ -2,10 +2,10 @@ package com.example.entity.dto;
 
 import lombok.Data;
 
-import java.io.Serializable;
-
 @Data
-public class UserSpaceDto implements Serializable {
+public class UserDTO {
+    private Long id;
+    private String nickName;
     private Long useSpace;
     private Long totalSpace;
 }

@@ -3,8 +3,11 @@ package com.example.entity.dto;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import lombok.Data;
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> origin/main
 @Data
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class SysSettingsDto{

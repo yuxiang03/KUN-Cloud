@@ -8,10 +8,10 @@ import java.util.Date;
 
 @Data
 public class FileInfo{
-    private String fileId;
-    private String userId;
+    private Long fileId;
+    private Long userId;
     private String fileMd5;
-    private String filePid;
+    private Long filePid;
     private Long fileSize;
     private String fileName;
     private String fileCover;

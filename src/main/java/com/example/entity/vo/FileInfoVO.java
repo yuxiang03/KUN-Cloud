@@ -5,7 +5,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Data
 public class FileInfoVO {
-    private String filePid;
+    private Long userId;
+    private Long filePid;
     private Long fileSize;
     private String fileMd5;
     private String fileName;

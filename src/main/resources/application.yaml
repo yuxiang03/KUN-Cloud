@@ -54,5 +54,12 @@ spring:
         acknowledge-mode: auto
         retry:
           enabled: true
+  servlet:
+    multipart:
+      enabled: false
+      # 设置单个文件大小
+      max-file-size: 1GB
+      # 设置单次请求文件的总大小
+      max-request-size: 1GB
 mybatis-plus:
   type-aliases-package: com.example

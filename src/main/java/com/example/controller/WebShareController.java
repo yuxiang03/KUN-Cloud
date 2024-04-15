@@ -35,7 +35,6 @@ public class WebShareController extends CommonFileController {
     @Resource
     private UserService userInfoService;
 
-
     /**
      * 获取分享登录信息
      *

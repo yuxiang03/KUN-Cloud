@@ -2,6 +2,7 @@ package com.example.service.Impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
+import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionShareDto;
 import com.example.entity.enums.PageSize;
 import com.example.entity.enums.ShareValidTypeEnums;
@@ -30,7 +31,7 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 根据条件查询列表
      */
     @Override
-    public List<FileShare> findListByParam(FileShareQuery param) {
+    public Result findListByParam(FileShareQuery param) {
         return this.fileShareMapper.selectList(param);
     }
 

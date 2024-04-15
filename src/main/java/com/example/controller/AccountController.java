@@ -7,7 +7,7 @@ import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.po.EmailCode;
 import com.example.entity.po.User;
-import com.example.entity.pojo.Register;
+import com.example.entity.po.Register;
 import com.example.service.EmailCodeService;
 import com.example.service.UserService;
 import jakarta.annotation.Resource;
@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -73,8 +74,9 @@ public class AccountController{
     }
     
     @PostMapping("/login")
-    public Result login(@RequestBody LoginFormDTO loginForm){
+    public Result login(@RequestBody LoginFormDTO loginForm) {
         return userService.login(loginForm);
+    }
 
     @RequestMapping("/resetPwd")
     public Result resetPwd(HttpSession session,
@@ -94,8 +96,7 @@ public class AccountController{
     }
 
     @RequestMapping("/getAvatar/{userId}")
-    public void getAvatar(HttpServletResponse response,
-                          @PathVariable("userId") String userId) {
+    public void getAvatar(HttpServletResponse response, @PathVariable("userId") String userId) {
         String avatarFolderName = Constants.FILE_FOLDER_FILE + Constants.FILE_FOLDER_AVATAR_NAME;
         File folder = new File(appConfig.getProjectFolder() + avatarFolderName);
         if (!folder.exists()) {

@@ -10,7 +10,7 @@ import com.example.entity.dto.Result;
 import com.example.entity.dto.UserDTO;
 import com.example.entity.enums.UserStatusEnum;
 import com.example.entity.po.User;
-import com.example.entity.pojo.Register;
+import com.example.entity.po.Register;
 import com.example.mapper.UserMapper;
 import com.example.service.EmailCodeService;
 import com.example.service.UserService;

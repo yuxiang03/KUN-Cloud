@@ -3,7 +3,7 @@ package com.example.entity.query;
 import lombok.Data;
 
 @Data
-public class FileInfoQuery extends BaseParam {
+public class FileInfoQuery {
     private String fileId;
     private String userId;
     private String fileMd5;

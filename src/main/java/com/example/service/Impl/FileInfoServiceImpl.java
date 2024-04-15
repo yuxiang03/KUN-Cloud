@@ -1,11 +1,13 @@
 package com.example.service.Impl;
 
+import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.date.DateUtil;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
+import com.example.entity.dto.UserDTO;
 import com.example.entity.enums.*;
 import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
@@ -17,7 +19,6 @@ import com.example.mapper.UserMapper;
 import com.example.mapper.FileInfoMapper;
 import com.example.service.FileInfoService;
 import com.example.utils.RedisIdWorker;
-import com.example.utils.UserHolder;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
@@ -52,8 +53,8 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
     private RedisIdWorker redisIdWorker;
 
     @Override
-    public List<FileInfo> findListByParam(FileInfoQuery param) {
-        return listByIds(param.get);
+    public Result findListByParam(FileInfoQuery param) {
+        return listByIds(param);
     }
 
     @Override
@@ -150,37 +151,33 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         Boolean uploadSuccess = true;
         try {
             Date curDate = new Date();
-            String tokenKey = LOGIN_TOKEN_KEY+session.getAttribute("token");
+            String tokenKey = LOGIN_TOKEN_KEY+session.getAttribute("");
             Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(tokenKey);
+            UserDTO userDTO = BeanUtil.mapToBean(entries, UserDTO.class, true);
             if (fileInfoVO.getChunkIndex() == 0) {
                 FileInfoQuery infoQuery = new FileInfoQuery();
                 infoQuery.setFileMd5(fileInfoVO.getFileMd5());
-                infoQuery.setSimplePage(new SimplePage(0, 1));
                 infoQuery.setStatus(FileStatusEnums.USING.getStatus());
                 List<FileInfo> dbFileList = this.fileInfoMapper.selectList(infoQuery);
                 //秒传
                 if (!dbFileList.isEmpty()) {
                     FileInfo dbFile = dbFileList.get(0);
                     //判断文件状态
-                    if (dbFile.getFileSize() + spaceDto.getUseSpace() > spaceDto.getTotalSpace()) {
+                    if (dbFile.getFileSize() + userDTO.getUseSpace() > userDTO.getTotalSpace()) {
                         return Result.fail("可用空间不足");
                     }
-                    dbFile.setFileId(fileId);
-                    dbFile.setFilePid(filePid);
-                    dbFile.setUserId(webUserDto.getUserId());
-                    dbFile.setFileMd5(null);
+                    dbFile.setFilePid(fileInfoVO.getFilePid());
+                    dbFile.setUserId(userDTO.getId());
                     dbFile.setCreateTime(curDate);
                     dbFile.setLastUpdateTime(curDate);
                     dbFile.setStatus(FileStatusEnums.USING.getStatus());
                     dbFile.setDelFlag(FileDelFlagEnums.USING.getFlag());
-                    dbFile.setFileMd5(fileMd5);
-                    fileName = autoRename(filePid, webUserDto.getUserId(), fileName);
-                    dbFile.setFileName(fileName);
+                    dbFile.setFileMd5(fileInfoVO.getFileMd5());
+                    dbFile.setFileName(fileInfoVO.getFileName());
                     save(dbFile);
                     //resultDto.setStatus(UploadStatusEnums.UPLOAD_SECONDS.getCode());
                     //更新用户空间使用
-                    updateUserSpace(webUserDto, dbFile.getFileSize());
-
+                    updateUserSpace(dbFile.getFileSize(),userDTO);
                     return Result.ok();
                 }
             }
@@ -260,7 +257,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         }
     }
 
-    private void updateUserSpace(SessionWebUserDto webUserDto, Long totalSize) {
+    private void updateUserSpace(Long totalSize) {
         Integer count = userMapper.updateUserSpace(webUserDto.getUserId(), totalSize, null);
         if (count == 0) {
             throw new BusinessException(ResponseCodeEnum.CODE_904);
@@ -493,12 +490,12 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         save(fileInfo);
 
         FileInfoQuery fileInfoQuery = new FileInfoQuery();
-        fileInfoQuery.setFilePid(filePid);
-        fileInfoQuery.setUserId(userId);
-        fileInfoQuery.setFileName(folderName);
+        fileInfoQuery.setFilePid(folderVO.getFilePid());
+        fileInfoQuery.setUserId(folderVO.getUserId());
+        fileInfoQuery.setFileName(folderVO.getFileName());
         fileInfoQuery.setFolderType(FileFolderTypeEnums.FOLDER.getType());
         fileInfoQuery.setDelFlag(FileDelFlagEnums.USING.getFlag());
-        Integer count = this.fileInfoMapper.selectCount(fileInfoQuery);
+        Integer count = fileInfoMapper.selectCount();
         if (count > 1) {
             throw new Exception("文件夹" + folderName + "已经存在");
         }

@@ -47,8 +47,7 @@ public class FileInfoController extends CommonFileController {
 
     @RequestMapping("/getFile/{fileId}")
     public void getFile(HttpServletResponse response, HttpSession session, @PathVariable("fileId") String fileId) {
-        SessionWebUserDto webUserDto = getUserInfoFromSession(session);
-        super.getFile(response, fileId, webUserDto.getUserId());
+        super.getFile(response, fileId);
     }
 
     @RequestMapping("/newFoloder")
@@ -66,7 +65,6 @@ public class FileInfoController extends CommonFileController {
     public Result rename(HttpSession session,
                              String fileId,
                              String fileName) {
-        SessionWebUserDto webUserDto = getUserInfoFromSession(session);
         return fileInfoService.rename(fileId, webUserDto.getUserId(), fileName);
     }
 

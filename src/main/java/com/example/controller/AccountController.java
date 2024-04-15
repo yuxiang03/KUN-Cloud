@@ -6,8 +6,9 @@ import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.po.EmailCode;
+import com.example.entity.po.RePwd;
+import com.example.entity.po.Register;
 import com.example.entity.po.User;
-import com.example.entity.pojo.Register;
 import com.example.service.EmailCodeService;
 import com.example.service.UserService;
 import jakarta.annotation.Resource;
@@ -19,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -29,6 +31,9 @@ import static com.example.utils.RedisContants.LOGIN_TOKEN_KEY;
 @RestController
 public class AccountController{
     private static final Logger logger = LoggerFactory.getLogger(AccountController.class);
+
+    private static final String CONTENT_TYPE = "Content-Type";
+    private static final String CONTENT_TYPE_VALUE = "application/json;charset=UTF-8";
 
     @Resource
     private UserService userService;
@@ -73,21 +78,19 @@ public class AccountController{
     }
     
     @PostMapping("/login")
-    public Result login(@RequestBody LoginFormDTO loginForm){
+    public Result login(@RequestBody LoginFormDTO loginForm) {
         return userService.login(loginForm);
+    }
 
+
+    //忘记密码
     @RequestMapping("/resetPwd")
-    public Result resetPwd(HttpSession session,
-                               String email,
-                               String password,
-                               String checkCode,
-                               String emailCode) {
+    public Result resetPwd(@RequestBody RePwd rePwd, HttpSession session) {
         try {
-            if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
+            if (!rePwd.getCheckCode().equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
                 return Result.fail("图片验证码不正确");
             }
-            userInfoService.resetPwd(email, password, emailCode);
-            return Result.ok(null);
+            return userService.resetPwd(rePwd.getEmail(), rePwd.getPassword(), rePwd.getEmailCode());
         } finally {
             session.removeAttribute(Constants.CHECK_CODE_KEY);
         }
@@ -131,21 +134,18 @@ public class AccountController{
     }
 
     @RequestMapping("/getUserInfo")
-    public Result getUserInfo(HttpSession session) {
-        SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
-        return Result.ok(sessionWebUserDto);
+    public Result getUserInfo(String token) {
+        return userService.getUserInfo(token);
     }
 
     @RequestMapping("/getUseSpace")
-    public Result getUseSpace(HttpSession session) {
-        SessionWebUserDto sessionWebUserDto = getUserInfoFromSession(session);
-        return Result.ok(redisComponent.getUserSpaceUse(sessionWebUserDto.getUserId()));
+    public Result getUseSpace(String token) {
+        return userService.getUseSpace(token);
     }
 
     @RequestMapping("/logout")
-    public Result logout(@RequestBody LoginFormDTO loginForm) {
-        stringRedisTemplate.delete(LOGIN_TOKEN_KEY);
-        return Result.ok(null);
+    public Result logout(String token) {
+        return userService.logout(token);
     }
 
     @RequestMapping("/updateUserAvatar")
@@ -170,6 +170,7 @@ public class AccountController{
         return Result.ok(null);
     }
 
+    //更新密码
     @RequestMapping("/updatePassword")
     public Result updatePassword(HttpSession session,
                                      String password) {

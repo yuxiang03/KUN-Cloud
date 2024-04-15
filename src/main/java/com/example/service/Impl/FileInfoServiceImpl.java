@@ -17,7 +17,6 @@ import com.example.mapper.UserMapper;
 import com.example.mapper.FileInfoMapper;
 import com.example.service.FileInfoService;
 import com.example.utils.RedisIdWorker;
-import com.example.utils.UserHolder;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
 import org.apache.tomcat.util.http.fileupload.FileUtils;

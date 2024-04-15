@@ -1,9 +1,11 @@
 package com.example.service;
 
 
-import com.easypan.entity.po.EmailCode;
 import com.easypan.entity.query.EmailCodeQuery;
 import com.easypan.entity.vo.PaginationResultVO;
+import com.example.entity.dto.Result;
+import com.example.entity.po.EmailCode;
+import jakarta.servlet.http.HttpSession;
 
 import java.util.List;
 
@@ -60,7 +62,7 @@ public interface EmailCodeService {
      */
     Integer deleteEmailCodeByEmailAndCode(String email, String code);
 
-    void sendEmailCode(String toEmail, Integer type);
+    Result sendEmailCode(EmailCode emailCode, HttpSession session);
 
     void checkCode(String email, String code);
 }

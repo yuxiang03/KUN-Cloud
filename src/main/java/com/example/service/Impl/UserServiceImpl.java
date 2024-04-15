@@ -2,19 +2,27 @@ package com.example.service.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.example.entity.constants.Constants;
 import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.UserDTO;
+import com.example.entity.enums.UserStatusEnum;
 import com.example.entity.po.User;
+import com.example.entity.pojo.Register;
 import com.example.mapper.UserMapper;
+import com.example.service.EmailCodeService;
 import com.example.service.UserService;
 import com.example.utils.JwtUtils;
+import com.example.utils.MD5Utils;
 import com.example.utils.RegexUtils;
 import jakarta.annotation.Resource;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -26,6 +34,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
 
     @Resource
     private StringRedisTemplate stringRedisTemplate;
+
+    @Autowired
+    private EmailCodeService emailCodeService;
 
     @Override
     public Result login(LoginFormDTO loginForm) {
@@ -54,5 +65,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     @Override
     public Result logout(LoginFormDTO loginForm) {
         return Result.ok();
+    }
+
+    @Override
+    public Result register(Register register) {
+        QueryWrapper<User> queryWrapper=new QueryWrapper<>();
+        QueryWrapper<User> email = queryWrapper.eq("email", register.getEmail());
+        User user = getOne(email);
+        if (null != user) {
+            return Result.fail("邮箱账号已经存在");
+        }
+
+        QueryWrapper<User> nick_name = queryWrapper.eq("nick_name", register.getNickName());
+        User nickNameUser = getOne(nick_name);
+        if (null != nickNameUser) {
+            return Result.fail("昵称已经存在");
+        }
+        //校验邮箱验证码
+        emailCodeService.checkCode(register.getEmail(), register.getEmailCode());
+        user = new User();
+        user.setNickName(register.getNickName());
+        user.setEmail(register.getEmail());
+        String password = register.getPassword();
+        String pw = MD5Utils.encrypt(password);
+        user.setPassword(pw);
+        user.setJoinTime(new Date());
+        user.setStatus(UserStatusEnum.ENABLE.getStatus());
+        user.setTotalSpace(512 * Constants.MB);
+        user.setUseSpace(0L);
+        save(user);
+        return Result.ok(null);
     }
 }

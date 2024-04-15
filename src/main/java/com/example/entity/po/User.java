@@ -44,4 +44,7 @@ public class User{
      * 总空间单位byte
      */
     private Long totalSpace;
+
+
+
 }

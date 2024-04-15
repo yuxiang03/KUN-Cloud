@@ -1,33 +1,45 @@
 package com.example.service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SysSettingsDto;
 import com.example.entity.enums.PageSize;
 import com.example.entity.po.EmailCode;
+import com.example.entity.po.User;
 import com.example.entity.query.SimplePage;
 import com.example.entity.vo.PaginationResultVO;
+import com.example.mapper.EmailCodeMapper;
 import com.example.mapper.UserMapper;
 import com.example.service.EmailCodeService;
+import com.example.service.UserService;
+import com.example.utils.CreateCodeUtils;
 import jakarta.annotation.Resource;
 import jakarta.mail.internet.MimeMessage;
+import jakarta.servlet.http.HttpSession;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
 /**
  * 邮箱验证码 业务接口实现
  */
 @Service("emailCodeService")
-public class EmailCodeServiceImpl extends ServiceImpl<> implements EmailCodeService {
+public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode> implements EmailCodeService {
     @Resource
     private JavaMailSender javaMailSender;
 
     @Resource
     private UserMapper userMapper;
+
+    @Autowired
+    private UserService userService;
 
     /**
      * 根据条件查询列表
@@ -141,25 +153,37 @@ public class EmailCodeServiceImpl extends ServiceImpl<> implements EmailCodeServ
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void sendEmailCode(String toEmail, Integer type) {
-        //如果是注册，校验邮箱是否已存在
-        if (type == Constants.ZERO) {
-            UserInfo userInfo = userInfoMapper.selectByEmail(toEmail);
-            if (null != userInfo) {
-                throw new BusinessException("邮箱已经存在");
+    public Result sendEmailCode(EmailCode emailCode, HttpSession session) {
+        try {
+            if (!emailCode.getCode().equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY_EMAIL))) {
+                return Result.fail("图片验证码不正确");
             }
+            //如果是注册，校验邮箱是否已存在
+            if (emailCode.getStatus() == Constants.ZERO) {
+                QueryWrapper<User> queryWrapper=new QueryWrapper<>();
+                QueryWrapper<User> qw = queryWrapper.eq("email", emailCode.getEmail());
+                User user = userService.getOne(qw);
+                if (null != user) {
+                    try {
+                        throw new Exception("邮箱已经存在");
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            String code = CreateCodeUtils.creatCode(Constants.LENGTH_5);
+            sendEmailCode(emailCode.getEmail(), code);
+
+            update().set("status",1).eq("status",0).eq("email",emailCode.getEmail());
+            EmailCode em = new EmailCode();
+            em.setCode(code);
+            em.setEmail(emailCode.getEmail());
+            emailCode.setStatus(Constants.ZERO);
+            save(em);
+            return Result.ok(null);
+        } finally {
+            session.removeAttribute(Constants.CHECK_CODE_KEY_EMAIL);
         }
-
-        String code = StringTools.getRandomNumber(Constants.LENGTH_5);
-        sendEmailCode(toEmail, code);
-
-        emailCodeMapper.disableEmailCode(toEmail);
-        EmailCode emailCode = new EmailCode();
-        emailCode.setCode(code);
-        emailCode.setEmail(toEmail);
-        emailCode.setStatus(Constants.ZERO);
-        emailCode.setCreateTime(new Date());
-        emailCodeMapper.insert(emailCode);
     }
 
     @Override

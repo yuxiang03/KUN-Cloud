@@ -1,15 +1,15 @@
 package com.example.controller;
 
-import cn.hutool.jwt.JWT;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.CreateImageCode;
 import com.example.entity.dto.LoginFormDTO;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionWebUserDto;
+import com.example.entity.po.EmailCode;
 import com.example.entity.po.User;
+import com.example.entity.pojo.Register;
 import com.example.service.EmailCodeService;
 import com.example.service.UserService;
-import io.jsonwebtoken.Jwts;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
@@ -19,7 +19,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
 import java.io.IOException;
@@ -56,35 +55,18 @@ public class AccountController{
     }
 
     @RequestMapping("/sendEmailCode")
-    public Result sendEmailCode(HttpSession session,
-                                    String email,
-                                    String checkCode,
-                                    Integer type) {
-        try {
-            if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY_EMAIL))) {
-                return Result.fail("图片验证码不正确");
-            }
-            emailCodeService.sendEmailCode(email, type);
-            return Result.ok(null);
-        } finally {
-            session.removeAttribute(Constants.CHECK_CODE_KEY_EMAIL);
-        }
+    public Result sendEmailCode(@RequestBody EmailCode emailCode, HttpSession session) {
+        return emailCodeService.sendEmailCode(emailCode,session);
     }
 
     //注册
     @RequestMapping("/register")
-    public Result register(HttpSession session,
-                               String email,
-                               String nickName,
-                               String password,
-                               String checkCode,
-                               String emailCode) {
+    public Result register(@RequestBody Register register,HttpSession session) {
         try {
-            if (!checkCode.equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
-                Result.fail("图片验证码不正确");
+            if (!register.getCheckCode().equalsIgnoreCase((String) session.getAttribute(Constants.CHECK_CODE_KEY))) {
+                return Result.fail("图片验证码不正确");
             }
-            userInfoService.register(email, nickName, password, emailCode);
-            return Result.ok(null);
+            return userService.register(register);
         } finally {
             session.removeAttribute(Constants.CHECK_CODE_KEY);
         }

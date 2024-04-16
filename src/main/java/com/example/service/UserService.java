@@ -18,4 +18,6 @@ public interface UserService extends IService<User> {
     Result getUserInfo(String token);
 
     Result getUseSpace(String token);
+
+    void updatePwdByUserId(HttpSession session, String password);
 }

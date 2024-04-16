@@ -71,21 +71,7 @@ public class WebShareController extends CommonFileController {
     }
 
     private Result getShareInfoCommon(String shareId) {
-        FileShare share = fileShareService.getFileShareByShareId(shareId);
-        if (null == share || (share.getExpireTime() != null && new Date().after(share.getExpireTime()))) {
-            throw new BusinessException(ResponseCodeEnum.CODE_902.getMsg());
-        }
-        ShareInfoVO shareInfoVO = CopyTools.copy(share, ShareInfoVO.class);
-        FileInfo fileInfo = fileInfoService.getFileInfoByFileIdAndUserId(share.getFileId(), share.getUserId());
-        if (fileInfo == null || !FileDelFlagEnums.USING.getFlag().equals(fileInfo.getDelFlag())) {
-            throw new BusinessException(ResponseCodeEnum.CODE_902.getMsg());
-        }
-        shareInfoVO.setFileName(fileInfo.getFileName());
-        UserInfo userInfo = userInfoService.getUserInfoByUserId(share.getUserId());
-        shareInfoVO.setNickName(userInfo.getNickName());
-        shareInfoVO.setAvatar(userInfo.getQqAvatar());
-        shareInfoVO.setUserId(userInfo.getUserId());
-        return shareInfoVO;
+        return fileShareService.getFileShareByShareId(shareId);
     }
 
     /**
@@ -116,18 +102,7 @@ public class WebShareController extends CommonFileController {
     public Result loadFileList(HttpSession session,
                                String shareId, String filePid) {
         SessionShareDto shareSessionDto = checkShare(session, shareId);
-        FileInfoQuery query = new FileInfoQuery();
-        if (!StringTools.isEmpty(filePid) && !Constants.ZERO_STR.equals(filePid)) {
-            fileInfoService.checkRootFilePid(shareSessionDto.getFileId(), shareSessionDto.getShareUserId(), filePid);
-            query.setFilePid(filePid);
-        } else {
-            query.setFileId(shareSessionDto.getFileId());
-        }
-        query.setUserId(shareSessionDto.getShareUserId());
-        query.setOrderBy("last_update_time desc");
-        query.setDelFlag(FileDelFlagEnums.USING.getFlag());
-        PaginationResultVO resultVO = fileInfoService.findListByPage(query);
-        return Result.fail(convert2PaginationVO(resultVO, FileInfoVO.class));
+        return Result.fail();
     }
 
 

@@ -46,7 +46,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode>
      */
     @Override
     public Result findListByParam(EmailCodeQuery param) {
-        return this.emailCodeMapper.selectList(param);
+        return emailCodeService.selectList(param);
     }
 
     /**
@@ -54,14 +54,14 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode>
      */
     @Override
     public Result findCountByParam(EmailCodeQuery param) {
-        return this.emailCodeMapper.selectCount(param);
+        return emailCodeService.selectCount(param);
     }
 
     /**
      * 分页查询方法
      */
     @Override
-    public Result findListByPage(EmailCodeQuery param) {
+    public Result findList(EmailCodeQuery param) {
         int count = this.findCountByParam(param);
         int pageSize = param.getPageSize() == null ? PageSize.SIZE15.getSize() : param.getPageSize();
 
@@ -77,7 +77,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode>
      */
     @Override
     public Result add(EmailCode bean) {
-        return this.emailCodeMapper.insert(bean);
+        return emailCodeService.insert(bean);
     }
 
     /**
@@ -88,7 +88,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode>
         if (listBean == null || listBean.isEmpty()) {
             return 0;
         }
-        return this.emailCodeMapper.insertBatch(listBean);
+        return emailCodeService.insertBatch(listBean);
     }
 
     /**
@@ -107,7 +107,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode>
      */
     @Override
     public Result getEmailCodeByEmailAndCode(String email, String code) {
-        return this.emailCodeMapper.selectByEmailAndCode(email, code);
+        return emailCodeService.selectByEmailAndCode(email, code);
     }
 
     /**
@@ -115,7 +115,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode>
      */
     @Override
     public Result updateEmailCodeByEmailAndCode(EmailCode bean, String email, String code) {
-        return this.emailCodeMapper.updateByEmailAndCode(bean, email, code);
+        return emailCodeService.updateByEmailAndCode(bean, email, code);
     }
 
     /**
@@ -123,7 +123,7 @@ public class EmailCodeServiceImpl extends ServiceImpl<EmailCodeMapper,EmailCode>
      */
     @Override
     public Result deleteEmailCodeByEmailAndCode(String email, String code) {
-        return this.emailCodeMapper.deleteByEmailAndCode(email, code);
+        return emailCodeService.deleteByEmailAndCode(email, code);
     }
 
     private void sendEmailCode(String toEmail, String code) {

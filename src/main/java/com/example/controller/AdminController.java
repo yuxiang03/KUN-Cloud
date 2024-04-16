@@ -53,7 +53,7 @@ public class AdminController extends CommonFileController {
     @RequestMapping("/loadUserList")
     public Result loadUser(UserInfoQuery userInfoQuery) {
         userInfoQuery.setOrderBy("join_time desc");
-        PaginationResultVO resultVO = userInfoService.findListByPage(userInfoQuery);
+        PaginationResultVO resultVO = userInfoService.findList(userInfoQuery);
         return Result.ok(convert2PaginationVO(resultVO, UserInfoVO.class));
     }
 

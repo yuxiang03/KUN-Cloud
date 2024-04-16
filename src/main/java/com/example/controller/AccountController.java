@@ -16,8 +16,6 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -36,8 +34,6 @@ public class AccountController{
     @Resource
     private UserService userService;
     @Resource
-    private StringRedisTemplate stringRedisTemplate;
-    @Autowired
     private EmailCodeService emailCodeService;
 
     @RequestMapping(value = "/checkCode")
@@ -76,8 +72,8 @@ public class AccountController{
     }
     
     @PostMapping("/login")
-    public Result login(@RequestBody LoginFormDTO loginForm) {
-        return userService.login(loginForm);
+    public Result login(@RequestBody LoginFormDTO loginForm,HttpSession httpSession) {
+        return userService.login(loginForm,httpSession);
     }
 
 

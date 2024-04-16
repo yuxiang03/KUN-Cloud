@@ -20,16 +20,10 @@ import java.net.URLEncoder;
 import java.util.List;
 
 public class CommonFileController {
-
     @Resource
     protected FileInfoService fileInfoService;
-
-    @Resource
-    protected AppConfig appConfig;
-
     @Resource
     private StringRedisTemplate stringRedisTemplate;
-
 
     public Result getFolderInfo(String path, String userId) {
         String[] pathArray = path.split("/");

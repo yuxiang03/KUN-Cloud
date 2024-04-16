@@ -1,27 +1,27 @@
 package com.example.service.Impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.Result;
 import com.example.entity.dto.SessionShareDto;
-import com.example.entity.enums.PageSize;
+import com.example.entity.enums.FileDelFlagEnums;
 import com.example.entity.enums.ShareValidTypeEnums;
+import com.example.entity.po.FileInfo;
 import com.example.entity.po.FileShare;
+import com.example.entity.po.User;
 import com.example.entity.query.FileShareQuery;
-import com.example.entity.query.SimplePage;
-import com.example.entity.vo.PaginationResultVO;
+import com.example.entity.vo.ShareInfoVO;
 import com.example.mapper.FileShareMapper;
 import com.example.service.FileShareService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Date;
 import java.util.List;
 
-/**
- * 分享信息 业务接口实现
- */
-@Service("fileShareService")
+@Service
 public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare> implements FileShareService {
 
     @Resource
@@ -39,7 +39,7 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 根据条件查询列表
      */
     @Override
-    public Integer findCountByParam(FileShareQuery param) {
+    public Result findCountByParam(FileShareQuery param) {
         return this.fileShareMapper.selectCount(param);
     }
 
@@ -47,14 +47,7 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 分页查询方法
      */
     @Override
-    public PaginationResultVO<FileShare> findListByPage(FileShareQuery param) {
-        int count = this.findCountByParam(param);
-        int pageSize = param.getPageSize() == null ? PageSize.SIZE15.getSize() : param.getPageSize();
-
-        SimplePage page = new SimplePage(param.getPageNo(), count, pageSize);
-        param.setSimplePage(page);
-        List<FileShare> list = this.findListByParam(param);
-        PaginationResultVO<FileShare> result = new PaginationResultVO(count, page.getPageSize(), page.getPageNo(), page.getPageTotal(), list);
+    public Result findList(FileShareQuery param) {
         return result;
     }
 
@@ -62,7 +55,7 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 新增
      */
     @Override
-    public Integer add(FileShare bean) {
+    public Result add(FileShare bean) {
         return save(bean);
     }
 
@@ -70,7 +63,7 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 批量新增
      */
     @Override
-    public Integer addBatch(List<FileShare> listBean) {
+    public Result addBatch(List<FileShare> listBean) {
         if (listBean == null || listBean.isEmpty()) {
             return 0;
         }
@@ -81,7 +74,7 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 批量新增或者修改
      */
     @Override
-    public Integer addOrUpdateBatch(List<FileShare> listBean) {
+    public Result addOrUpdateBatch(List<FileShare> listBean) {
         if (listBean == null || listBean.isEmpty()) {
             return 0;
         }
@@ -92,15 +85,21 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 根据ShareId获取对象
      */
     @Override
-    public FileShare getFileShareByShareId(String shareId) {
-        return this.fileShareMapper.selectByShareId(shareId);
+    public Result getFileShareByShareId(String shareId) {
+        QueryWrapper<FileShare> queryWrapper = new QueryWrapper();
+        queryWrapper.eq("share_id",shareId);
+        FileShare share = fileShareMapper.selectOne(queryWrapper);
+        if (share == null || (share.getExpireTime() != null && new Date().after(share.getExpireTime()))) {
+            return Result.fail("文件不存在或已过期");
+        }
+        return Result.ok();
     }
 
     /**
      * 根据ShareId修改
      */
     @Override
-    public Integer updateFileShareByShareId(FileShare bean, String shareId) {
+    public Result updateFileShareByShareId(FileShare fileShare, String shareId) {
         return this.fileShareMapper.updateByShareId(bean, shareId);
     }
 
@@ -108,7 +107,7 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
      * 根据ShareId删除
      */
     @Override
-    public Integer deleteFileShareByShareId(String shareId) {
+    public Result deleteFileShareByShareId(String shareId) {
         return this.fileShareMapper.deleteByShareId(shareId);
     }
 
@@ -133,14 +132,14 @@ public class FileShareServiceImpl extends ServiceImpl<FileShareMapper,FileShare>
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteFileShareBatch(String[] shareIdArray, String userId) {
-        Integer count = this.fileShareMapper.deleteFileShareBatch(shareIdArray, userId);
+        Result count = this.fileShareMapper.deleteFileShareBatch(shareIdArray, userId);
         if (count != shareIdArray.length) {
             throw new BusinessException(ResponseCodeEnum.CODE_600);
         }
     }
 
     @Override
-    public SessionShareDto checkShareCode(String shareId, String code) {
+    public Result checkShareCode(String shareId, String code) {
         FileShare share = this.fileShareMapper.selectByShareId(shareId);
         if (null == share || (share.getExpireTime() != null && new Date().after(share.getExpireTime()))) {
             throw new BusinessException(ResponseCodeEnum.CODE_902);

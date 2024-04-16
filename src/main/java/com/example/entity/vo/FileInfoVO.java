@@ -16,5 +16,5 @@ public class FileInfoVO {
     private Integer fileCategory;
     private Integer fileType;
     private Integer chunkIndex;
-    private Integer chunks;
+    private Integer totalChunks;
 }

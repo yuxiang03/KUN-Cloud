@@ -8,24 +8,21 @@ import com.example.entity.po.FileInfo;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FileInfoVO;
 import com.example.entity.vo.FolderVO;
+import com.example.entity.vo.ListInfo;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
-/**
- * 文件信息 Controller
- */
 @RequestMapping("/file")
 public class FileInfoController extends CommonFileController {
 
     @RequestMapping("/loadDataList")
-    public Result loadDataList(HttpSession session, FileInfoQuery query, String category) {
-        return fileInfoService.findListByPage(query);
+    public Result loadDataList(ListInfo listInfo) {
+        return fileInfoService.findList(listInfo);
     }
 
     @RequestMapping("/uploadFile")

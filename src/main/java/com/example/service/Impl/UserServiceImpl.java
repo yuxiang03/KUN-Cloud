@@ -18,10 +18,12 @@ import com.example.utils.JwtUtils;
 import com.example.utils.MD5Utils;
 import com.example.utils.RegexUtils;
 import jakarta.annotation.Resource;
+import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Service;
 
+import java.net.http.HttpResponse;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +41,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
     private EmailCodeService emailCodeService;
 
     @Override
-    public Result login(LoginFormDTO loginForm) {
+    public Result login(LoginFormDTO loginForm, HttpSession httpSession) {
         String account = loginForm.getAccount();
         if(RegexUtils.isPhoneInvalid(account)||RegexUtils.isEmailInvalid(account)) return Result.fail("格式错误");
         Object cacheCode = stringRedisTemplate.opsForValue().get(LOGIN_CODE_KEY+account);
@@ -54,6 +56,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
                         .setIgnoreNullValue(true)
                         .setFieldValueEditor((fieldName,fieldValue)->fieldValue.toString()));
         String token = JwtUtils.generateJwt(map);
+        httpSession.setAttribute("token",token);
         String tokenKey = LOGIN_TOKEN_KEY+token;
         stringRedisTemplate.opsForHash().putAll(tokenKey,map);
         stringRedisTemplate.expire(tokenKey,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
@@ -107,7 +110,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
         }
         //校验邮箱验证码
         emailCodeService.checkCode(email, emailCode);
-
         User updateuser = new User();
         updateuser.setPassword(MD5Utils.encrypt(password));
         QueryWrapper<User> wrapper=new QueryWrapper<>();

@@ -6,14 +6,7 @@ import com.example.entity.query.FileShareQuery;
 
 import java.util.List;
 
-/**
- * 分享信息 业务接口
- */
 public interface FileShareService {
-
-    /**
-     * 根据条件查询列表
-     */
     Result findListByParam(FileShareQuery param);
 
     /**
@@ -24,7 +17,7 @@ public interface FileShareService {
     /**
      * 分页查询
      */
-    Result findListByPage(FileShareQuery param);
+    Result findList(FileShareQuery param);
 
     /**
      * 新增

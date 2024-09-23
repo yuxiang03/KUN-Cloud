@@ -76,7 +76,6 @@ public class AccountController{
         return userService.login(loginForm,httpSession);
     }
 
-
     //忘记密码
     @RequestMapping("/resetPwd")
     public Result resetPwd(@RequestBody RePwd rePwd, HttpSession session) {

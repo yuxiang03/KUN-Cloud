@@ -8,7 +8,7 @@ public class CreateCodeUtils {
         String code = "";
         Random r = new Random();
         for (int i = 0; i < n; i++) {
-            int type = r.nextInt(3)
+            int type = r.nextInt(3);
             switch (type) {
                 case 0:
                     char ch = (char) (r.nextInt(26) + 65);

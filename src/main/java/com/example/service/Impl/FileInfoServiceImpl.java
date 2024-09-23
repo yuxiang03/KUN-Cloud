@@ -2,35 +2,29 @@ package com.example.service.Impl;
 
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.bean.copier.CopyOptions;
-import cn.hutool.core.date.DateUtil;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.example.entity.constants.Constants;
 import com.example.entity.dto.Result;
-import com.example.entity.dto.SessionWebUserDto;
 import com.example.entity.dto.UserDTO;
 import com.example.entity.enums.*;
 import com.example.entity.po.FileInfo;
+import com.example.entity.po.User;
 import com.example.entity.query.FileInfoQuery;
 import com.example.entity.vo.FileInfoVO;
 import com.example.entity.vo.FolderVO;
-import com.example.entity.vo.ListInfo;
+import com.example.entity.vo.ShareInfoVO;
 import com.example.mapper.UserMapper;
 import com.example.mapper.FileInfoMapper;
 import com.example.service.FileInfoService;
 import com.example.utils.RedisIdWorker;
 import jakarta.annotation.Resource;
 import jakarta.servlet.http.HttpSession;
-import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.transaction.support.TransactionSynchronization;
-import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.io.*;
 import java.util.*;
@@ -56,8 +50,10 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
     @Override
     @Async
     public Result uploadFile(FileInfoVO fileInfoVo, HttpSession session) {
-        UserDTO userDTO = getUserDto(session.getAttribute("token").toString());
-        if (fileInfoVo.getFileSize() + userDTO.getUseSpace() > userDTO.getTotalSpace()) {
+        String token =session.getAttribute("token").toString();
+        UserDTO userDTO = getUserDto(token);
+        Long size = fileInfoVo.getFileSize() + userDTO.getUseSpace();
+        if (size > userDTO.getTotalSpace()) {
             return Result.fail("可用空间不足");
         }
         QueryWrapper queryWrapper = new QueryWrapper();
@@ -84,14 +80,14 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         //写入分片
         try (
                 InputStream inputStream = fileInfoVo.getFile().getInputStream();
-                FileOutputStream outputStream = new FileOutputStream(new File(chunkFileFolderPath + fileInfoVo.getChunkIndex()))
+                FileOutputStream outputStream = new FileOutputStream(chunkFileFolderPath + fileInfoVo.getChunkIndex())
         ) {
             IOUtils.copy(inputStream, outputStream);
             //logger.info("文件标识:{},chunkNumber:{}", fileInfoVo.getIdentifier(), fileInfoVo.getChunkNumber());
             //将该分片写入redis
-            long size = saveToRedis(fileInfoVo);
+            long rSize = saveToRedis(fileInfoVo);
             //合并分片
-            if (size == fileInfoVo.getTotalChunks()) {
+            if (rSize == fileInfoVo.getTotalChunks()) {
                 if (mergeChunks(fileInfoVo, userDTO.getId())) {
                     return Result.fail("合并文件失败");
                 }
@@ -99,7 +95,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         } catch (Exception e) {
             e.printStackTrace();
         }
-        updateUserSpace();
+        updateUserSpace(token, userDTO, size);
         return Result.ok();
     }
 
@@ -138,6 +134,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         fileInfo.setDelFlag(FileDelFlagEnums.USING.getFlag());
         fileInfo.setFileMd5(fileInfoVO.getFileMd5());
         fileInfo.setFileName(fileInfoVO.getFileName());
+        fileInfo.setFilePath(fileInfoVO.getFileCover());
         save(fileInfo);
         return true;
     }
@@ -190,8 +187,13 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
                 identifier + File.separator;
     }
 
-    private void updateUserSpace(Long totalSize) {
-
+    private void updateUserSpace(String token, UserDTO user, Long fileSize) {
+        user.setUseSpace(user.getUseSpace() - fileSize);
+        stringRedisTemplate.opsForHash().put(token,"userSpace",user.getUseSpace());
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("id",user.getId());
+        //userMapper.update(user,queryWrapper);
+        update().eq("id",user.getId()).update();
     }
 
     private void cutFile4Video(String fileId, String videoFilePath) throws Exception {
@@ -234,7 +236,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         if (fileInfo.getFileName().equals(fileName)) {
             return Result.ok(fileInfo);
         }
-        String filePid = fileInfo.getFilePid();
+        Long filePid = fileInfo.getFilePid();
         checkFileName(filePid, userId, fileName, fileInfo.getFolderType());
         //文件获取后缀
         if (FileFolderTypeEnums.FILE.getType().equals(fileInfo.getFolderType())) {
@@ -259,7 +261,7 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         return Result.ok(fileInfo);
     }
 
-    private void checkFileName(String filePid, String userId, String fileName, Integer folderType) throws Exception {
+    private void checkFileName(Long filePid, Long userId, String fileName, Integer folderType) throws Exception {
         FileInfoQuery fileInfoQuery = new FileInfoQuery();
         fileInfoQuery.setFolderType(folderType);
         fileInfoQuery.setFileName(fileName);
@@ -302,45 +304,6 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
         fileInfo.setFileName(folderName);
         fileInfo.setLastUpdateTime(curDate);
         return Result.ok(fileInfo);
-    }
-
-    @Transactional(rollbackFor = Exception.class)
-    public void changeFileFolder(String fileIds, String filePid, String userId) {
-        if (fileIds.equals(filePid)) {
-            throw new BusinessException(ResponseCodeEnum.CODE_600);
-        }
-        if (!Constants.ZERO_STR.equals(filePid)) {
-            FileInfo fileInfo = fileInfoService.getFileInfoByFileIdAndUserId(filePid, userId);
-            if (fileInfo == null || !FileDelFlagEnums.USING.getFlag().equals(fileInfo.getDelFlag())) {
-                throw new BusinessException(ResponseCodeEnum.CODE_600);
-            }
-        }
-        String[] fileIdArray = fileIds.split(",");
-
-        FileInfoQuery query = new FileInfoQuery();
-        query.setFilePid(filePid);
-        query.setUserId(userId);
-        List<FileInfo> dbFileList = fileInfoService.findListByParam(query);
-
-        Map<String, FileInfo> dbFileNameMap = dbFileList.stream().collect(Collectors.toMap(FileInfo::getFileName, Function.identity(), (file1, file2) -> file2));
-        //查询选中的文件
-        query = new FileInfoQuery();
-        query.setUserId(userId);
-        query.setFileIdArray(fileIdArray);
-        List<FileInfo> selectFileList = fileInfoService.findListByParam(query);
-
-        //将所选文件重命名
-        for (FileInfo item : selectFileList) {
-            FileInfo rootFileInfo = dbFileNameMap.get(item.getFileName());
-            //文件名已经存在，重命名被还原的文件名
-            FileInfo updateInfo = new FileInfo();
-            if (rootFileInfo != null) {
-                String fileName = StringTools.rename(item.getFileName());
-                updateInfo.setFileName(fileName);
-            }
-            updateInfo.setFilePid(filePid);
-            this.fileInfoMapper.updateByFileIdAndUserId(updateInfo, item.getFileId(), userId);
-        }
     }
 
     @Override
@@ -507,8 +470,19 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
     }
 
     @Override
-    @Transactional
-    public void saveShare(String shareRootFilePid, String shareFileIds, String myFolderId, String shareUserId, String cureentUserId) {
+    public void saveShare(ShareInfoVO shareInfoVO,HttpSession httpSession) {
+        QueryWrapper queryWrapper = new QueryWrapper();
+        queryWrapper.eq("file_id",shareInfoVO.getFileId());
+        UserDTO userDTO = getUserDto(httpSession.getAttribute("token").toString());
+        FileInfo fileInfo = fileInfoMapper.selectOne(queryWrapper);
+        fileInfo.setUserId(null);
+        fileInfo.setFilePid(shareInfoVO.getFilePid());
+        fileInfo.setLastUpdateTime(new Date());
+        save(fileInfo);
+        updateUserSpace(shareInfoVO.getUserId(), fileInfo.getFileSize()+);
+
+
+
         String[] shareFileIdArray = shareFileIds.split(",");
         //目标目录文件列表
         FileInfoQuery fileInfoQuery = new FileInfoQuery();
@@ -535,11 +509,11 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
 
         //更新空间
         Long useSpace = this.fileInfoMapper.selectUseSpace(cureentUserId);
-        UserInfo dbUserInfo = this.userMapper.selectByUserId(cureentUserId);
+        User dbUserInfo = this.userMapper.selectByUserId(cureentUserId);
         if (useSpace > dbUserInfo.getTotalSpace()) {
             throw new BusinessException(ResponseCodeEnum.CODE_904);
         }
-        UserInfo userInfo = new UserInfo();
+        User userInfo = new User();
         userInfo.setUseSpace(useSpace);
         this.userMapper.updateByUserId(userInfo, cureentUserId);
         //设置缓存
@@ -571,6 +545,6 @@ public class FileInfoServiceImpl extends ServiceImpl<FileInfoMapper,FileInfo> im
     public UserDTO getUserDto(String token) {
         Map<Object, Object> entries = stringRedisTemplate.opsForHash().entries(LOGIN_TOKEN_KEY + token);
         UserDTO userDTO = BeanUtil.mapToBean(entries,UserDTO.class,false,CopyOptions.create());
-        return  userDTO
+        return  userDTO;
     }
 }

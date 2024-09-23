@@ -18,32 +18,14 @@ public class FileShare{
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date expireTime;
-    /**
-     * 分享时间
-     */
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date shareTime;
-    /**
-     * 提取码
-     */
     private String code;
-    /**
-     * 浏览次数
-     */
     private Integer showCount;
     private String fileName;
-    /**
-     * 0:文件 1:目录
-     */
     private Integer folderType;
-    /**
-     * 1:视频 2:音频  3:图片 4:文档 5:其他
-     */
     private Integer fileCategory;
-    /**
-     * 1:视频 2:音频  3:图片 4:pdf 5:doc 6:excel 7:txt 8:code 9:zip 10:其他
-     */
     private Integer fileType;
     private String fileCover;
     @Override

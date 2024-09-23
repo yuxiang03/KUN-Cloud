@@ -1,5 +1,6 @@
 package com.example;
 
+import com.example.utils.JwtUtils;
 import org.junit.jupiter.api.Test;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -8,6 +9,8 @@ import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 
 @SpringBootTest
 class KunpanApplicationTests {
@@ -36,5 +39,15 @@ class KunpanApplicationTests {
     @Test
     void sendMessage(){
         rabbitTemplate.convertAndSend("simple.fanout",null,"kkkk");
+    }
+
+    @Test
+    public void jwtTest(){
+        Map map = new HashMap();
+        map.put("account","aaa");
+        map.put("password","bbb");
+        String s = JwtUtils.generateJwt(map);
+        System.out.println(s);
+        System.out.println(JwtUtils.parseJWT(s));
     }
 }

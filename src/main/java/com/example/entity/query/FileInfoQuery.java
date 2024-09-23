@@ -4,10 +4,10 @@ import lombok.Data;
 
 @Data
 public class FileInfoQuery {
-    private String fileId;
-    private String userId;
+    private Long fileId;
+    private Long userId;
     private String fileMd5;
-    private String filePid;
+    private Long filePid;
     private Long fileSize;
     private String fileName;
     private String fileCover;

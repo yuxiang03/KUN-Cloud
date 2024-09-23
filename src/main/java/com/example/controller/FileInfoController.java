@@ -62,11 +62,10 @@ public class FileInfoController extends CommonFileController {
     public Result rename(HttpSession session,
                              String fileId,
                              String fileName) {
-        return fileInfoService.rename(fileId, webUserDto.getUserId(), fileName);
+        return fileInfoService.rename(fileId, , fileName);
     }
 
     @RequestMapping("/loadAllFolder")
-
     public Result loadAllFolder(HttpSession session, String filePid, String currentFileIds) {
         FileInfoQuery query = new FileInfoQuery();
         query.setUserId(getUserInfoFromSession(session).getUserId());

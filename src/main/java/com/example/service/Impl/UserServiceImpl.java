@@ -57,7 +57,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper,User> implements Use
                         .setIgnoreNullValue(true)
                         .setFieldValueEditor((fieldName,fieldValue)->fieldValue.toString()));
         String token = JwtUtils.generateJwt(map);
-        httpSession.setAttribute("token",token);
         String tokenKey = LOGIN_TOKEN_KEY+token;
         stringRedisTemplate.opsForHash().putAll(tokenKey,map);
         stringRedisTemplate.expire(tokenKey,LOGIN_TOKEN_TTL, TimeUnit.MINUTES);
